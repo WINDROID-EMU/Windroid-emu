@@ -36,7 +36,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
-import com.windroid.emu.LorieView;
+import com.windroid.emu.views.GameSurfaceView;
 import com.windroid.emu.R;
 import com.windroid.emu.controller.ControllerUtils;
 import com.windroid.emu.controller.XKeyCodes.ButtonMapping;
@@ -59,7 +59,7 @@ public class VirtualKeyboardInputView extends View {
         init();
     }
 
-    private final LorieView lorieView = new LorieView(getContext());
+    private final GameSurfaceView lorieView = new GameSurfaceView(getContext());
     private Paint paint;
     private Paint textPaint;
     private final Path dpadUp = new Path();

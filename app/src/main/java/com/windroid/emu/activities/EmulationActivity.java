@@ -3,7 +3,6 @@ package com.windroid.emu.activities;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.view.WindowManager.LayoutParams.*;
-import static com.windroid.emu.CmdEntryPoint.ACTION_START;
 import static com.windroid.emu.activities.GeneralSettingsActivity.DISPLAY_STRETCH;
 import static com.windroid.emu.activities.GeneralSettingsActivity.DISPLAY_STRETCH_DEFAULT_VALUE;
 import static com.windroid.emu.activities.GeneralSettingsActivity.ENABLE_MANGOHUD;
@@ -96,8 +95,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.navigation.NavigationView;
-import com.windroid.emu.ICmdEntryInterface;
-import com.windroid.emu.LorieView;
+import com.windroid.emu.views.GameSurfaceView;
 import com.windroid.emu.R;
 import com.windroid.emu.controller.ControllerUtils;
 import com.windroid.emu.core.WineWrapper;
@@ -121,27 +119,11 @@ import android.app.ActivityManager;
 public class EmulationActivity extends AppCompatActivity implements View.OnApplyWindowInsetsListener {
     public static Handler handler = new Handler();
     private TouchInputHandler mInputHandler;
-    protected ICmdEntryInterface service = null;
     static InputMethodManager inputMethodManager;
     public static boolean externalKeyboardConnected = false;
     private View.OnKeyListener mLorieKeyListener;
     private final SharedPreferences.OnSharedPreferenceChangeListener preferencesChangedListener = (__,
             key) -> onPreferencesChanged();
-
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        @SuppressLint("UnspecifiedRegisterReceiverFlag")
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (ACTION_START.equals(intent.getAction())) {
-                try {
-                    Log.v("LorieBroadcastReceiver", "Got new ACTION_START intent");
-                    onReceiveConnection(intent);
-                } catch (Exception e) {
-                    Log.e("MainActivity", "Something went wrong while we extracted connection details from binder.", e);
-                }
-            }
-        }
-    };
 
     @SuppressLint("StaticFieldLeak")
     private static EmulationActivity instance;
@@ -158,7 +140,6 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
     private DrawerLayout drawerLayout;
     private VirtualKeyboardInputView virtualKeyboardInputView;
     private VirtualControllerInputView virtualControllerInputView;
-    private boolean isReceiverRegistered = false;
 
     @Override
     @SuppressLint({ "AppCompatMethod", "ObsoleteSdkInt", "ClickableViewAccessibility", "WrongConstant",
@@ -386,7 +367,7 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
             }
         });
 
-        LorieView lorieView = findViewById(R.id.lorieView);
+        GameSurfaceView lorieView = findViewById(R.id.lorieView);
         View lorieParent = (View) lorieView.getParent();
 
         Set<Integer> pressedKeys = new HashSet<>();
@@ -454,9 +435,6 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
         };
 
         lorieParent.setOnTouchListener((v, e) -> {
-            // Avoid batched MotionEvent objects and reduce potential latency.
-            // For reference:
-            // https://developer.android.com/develop/ui/views/touch-and-input/stylus-input/advanced-stylus-features#rendering.
             if (e.getAction() == MotionEvent.ACTION_DOWN) {
                 lorieParent.requestUnbufferedDispatch(e);
             }
@@ -491,28 +469,8 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
         lorieView.setOnKeyListener(mLorieKeyListener);
 
         lorieView.setCallback((sfc, surfaceWidth, surfaceHeight, screenWidth, screenHeight) -> {
-            String name;
-            int fpsLimit = (preferences != null) ? preferences.getInt(FPS_LIMIT, 0) : 0;
-
-            int frameRate = (fpsLimit > 0) ? fpsLimit : 200;
-
             mInputHandler.handleHostSizeChanged(surfaceWidth, surfaceHeight);
             mInputHandler.handleClientSizeChanged(screenWidth, screenHeight);
-            if (lorieView.getDisplay() == null || lorieView.getDisplay().getDisplayId() == Display.DEFAULT_DISPLAY) {
-                name = "Builtin Display";
-            } else {
-                name = "External Display";
-            }
-            LorieView.sendWindowChange(screenWidth, screenHeight, frameRate, name);
-
-
-            if (service != null && !LorieView.renderingInActivity()) {
-                try {
-                    service.windowChanged(sfc);
-                } catch (RemoteException e) {
-                    Log.e("EmulationActivity", "failed to send windowChanged request", e);
-                }
-            }
         });
 
         lorieView.setOnFocusChangeListener((view, b) -> {
@@ -520,10 +478,6 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
                 lorieView.requestLayout();
             }
         });
-
-        androidx.core.content.ContextCompat.registerReceiver(this, receiver, new IntentFilter(ACTION_START),
-                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
-        isReceiverRegistered = true;
 
         inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
@@ -576,12 +530,6 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
 
     @Override
     protected void onDestroy() {
-        // Only unregister if it was actually registered
-        if (isReceiverRegistered) {
-            unregisterReceiver(receiver);
-            isReceiverRegistered = false;
-        }
-        
         // Unregister preference change listener
         if (preferences != null) {
             preferences.unregisterOnSharedPreferenceChangeListener(preferencesChangedListener);
@@ -591,71 +539,13 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
     }
 
     public void onReceiveConnection(Intent intent) {
-        Bundle bundle = intent.getBundleExtra(null);
-        if (bundle == null)
-            return;
-        IBinder ibinder = bundle.getBinder(null);
-        if (ibinder == null)
-            return;
-
-        service = ICmdEntryInterface.Stub.asInterface(ibinder);
-        try {
-            service.asBinder().linkToDeath(() -> {
-                service = null;
-
-                Log.v("Lorie", "Disconnected");
-                runOnUiThread(() -> {
-                    LorieView.connect(-1);
-                    clientConnectedStateChanged();
-                });
-            }, 0);
-        } catch (RemoteException ignored) {
-        }
-
-        try {
-            if (service != null && service.asBinder().isBinderAlive()) {
-                Log.v("LorieBroadcastReceiver", "Extracting logcat fd.");
-                ParcelFileDescriptor logcatOutput = service.getLogcatOutput();
-                if (logcatOutput != null)
-                    LorieView.startLogcat(logcatOutput.detachFd());
-
-                tryConnect();
-
-                if (intent != getIntent())
-                    getIntent().putExtra(null, bundle);
-            }
-        } catch (Exception e) {
-            Log.e("EmulationActivity", "Something went wrong while we were establishing connection", e);
-        }
+        tryConnect();
     }
 
     public void tryConnect() {
-        if (LorieView.connected())
-            return;
-
-        if (service == null) {
-            LorieView.requestConnection();
-            handler.postDelayed(this::tryConnect, 250);
-            return;
-        }
-
-        try {
-            ParcelFileDescriptor fd = service.getXConnection();
-            if (fd != null) {
-                Log.v("MainActivity", "Extracting X connection socket.");
-                LorieView.connect(fd.detachFd());
-                getLorieView().triggerCallback();
-                clientConnectedStateChanged();
-            } else
-                handler.postDelayed(this::tryConnect, 250);
-        } catch (Exception e) {
-            Log.e("MainActivity", "Something went wrong while we were establishing connection", e);
-            service = null;
-
-            // We should reset the View for the case if we have sent it's surface to the
-            // client.
-            getLorieView().regenerate();
-            handler.postDelayed(this::tryConnect, 250);
+        if (GameSurfaceView.nativeIsSurfaceAvailable()) {
+            getLorieView().triggerCallback();
+            clientConnectedStateChanged();
         }
     }
 
@@ -667,7 +557,7 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
     @SuppressLint("UnsafeIntentLaunch")
     public void onPreferencesChangedCallback() {
         onWindowFocusChanged(hasWindowFocus());
-        LorieView lorieView = getLorieView();
+        GameSurfaceView lorieView = getLorieView();
 
         String filter = preferences.getString(SELECTED_SCALING_FILTER, SCALING_FILTER_LINEAR);
         int filterId = 0;
@@ -733,7 +623,7 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
         statsHandler.removeCallbacks(statsRunnable);
     }
 
-    public LorieView getLorieView() {
+    public GameSurfaceView getLorieView() {
         return findViewById(R.id.lorieView);
     }
 
@@ -778,13 +668,11 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
 
     private void clientConnectedStateChanged() {
         runOnUiThread(() -> {
-            boolean connected = LorieView.connected();
+            boolean connected = GameSurfaceView.nativeIsSurfaceAvailable();
 
             getLorieView().setVisibility(connected ? View.VISIBLE : View.INVISIBLE);
             getLorieView().regenerate();
 
-            // We should recover connection in the case if file descriptor for some reason
-            // was broken...
             if (!connected)
                 tryConnect();
         });

@@ -25,7 +25,7 @@ public class WinetricksWrapper {
                 "export TMPDIR=" + usrDir + "/tmp; " +
                 "export HOME=" + homeDir + "; " +
                 "export XDG_CONFIG_HOME=" + homeDir + "/.config; " +
-                "export DISPLAY=:0; " +
+                "export WINDROID_IPC_SOCKET=" + com.windroid.emu.activities.MainActivity.WINDROID_IPC_SOCKET_PATH + "; " +
                 "export PULSE_LATENCY_MSEC=60; " +
                 "export LD_LIBRARY_PATH=/system/lib64:" + usrDir + "/lib; " +
                 "export PATH=" + usrDir + "/bin:" + box64BinDir + ":$PATH; " +

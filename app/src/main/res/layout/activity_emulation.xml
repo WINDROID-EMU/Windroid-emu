@@ -13,13 +13,13 @@
         android:layout_height="match_parent"
         android:background="@color/black">
 
-        <com.windroid.emu.LorieView
+        <com.windroid.emu.views.GameSurfaceView
             android:id="@+id/lorieView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:visibility="visible">
-        </com.windroid.emu.LorieView>
+        </com.windroid.emu.views.GameSurfaceView>
 
         <com.windroid.emu.views.OnScreenInfoView
             android:id="@+id/hwView"

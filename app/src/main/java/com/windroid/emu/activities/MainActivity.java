@@ -932,10 +932,7 @@ public class MainActivity extends AppCompatActivity {
 
         RootUtils.mountTmpfs();
 
-        new Thread(() -> runCommand(
-                "env CLASSPATH=" + getClassPath()
-                        + " /system/bin/app_process / com.windroid.emu.CmdEntryPoint :0 &> /dev/null",
-                true)).start();
+        // O servidor X11 legado foi desativado em favor da renderização nativa do Android
     }
 
     private String getClassPath() {
@@ -1076,6 +1073,7 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("SdCardPath")
     public static final File appRootDir = new File("/data/data/com.windroid.emu/files");
+    public static final String WINDROID_IPC_SOCKET_PATH = appRootDir.getPath() + "/ipc.sock";
     public static File ratPackagesDir = new File(appRootDir + "/packages");
     public static String deviceArch = Build.SUPPORTED_ABIS[0].replace("arm64-v8a", "aarch64");
     private static String unixUsername = null;

@@ -42,7 +42,7 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import com.windroid.emu.LorieView;
+import com.windroid.emu.views.GameSurfaceView;
 import com.windroid.emu.activities.MainActivity;
 import com.windroid.emu.input.InputStub;
 
@@ -58,7 +58,7 @@ public class ControllerUtils {
 
     private static int controllerIndex = -1;
 
-    private static LorieView lorieView;
+    private static GameSurfaceView lorieView;
 
     public static final int UP = 1;
     public static final int RIGHT_UP = 2;
@@ -76,7 +76,7 @@ public class ControllerUtils {
     private static float mouseSensibility = 0F;
 
     public static void initialize(Context context) {
-        lorieView = new LorieView(context);
+        lorieView = new GameSurfaceView(context);
         handler.postDelayed(virtualMouseControllerRunnable, 16L);
         VibratorHelper.initialize(context);
     }

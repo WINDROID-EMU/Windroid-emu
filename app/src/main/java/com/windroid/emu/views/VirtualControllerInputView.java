@@ -33,7 +33,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
-import com.windroid.emu.LorieView;
+import com.windroid.emu.views.GameSurfaceView;
 import com.windroid.emu.R;
 import com.windroid.emu.controller.ControllerUtils;
 
@@ -62,7 +62,7 @@ public class VirtualControllerInputView extends View {
 
     private Paint paint;
     private Paint textPaint;
-    private final LorieView lorieView = new LorieView(getContext());
+    private final GameSurfaceView lorieView = new GameSurfaceView(getContext());
     private final Path dpadUp = new Path();
     private final Path dpadDown = new Path();
     private final Path dpadLeft = new Path();

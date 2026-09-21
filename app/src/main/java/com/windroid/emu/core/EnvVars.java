@@ -93,7 +93,7 @@ public class EnvVars {
         vars.add("TMPDIR=" + tmpDir);
         vars.add("HOME=" + homeDir);
         vars.add("XDG_CONFIG_HOME=" + homeDir + "/.config");
-        vars.add("DISPLAY=:0");
+        vars.add("WINDROID_IPC_SOCKET=" + com.windroid.emu.activities.MainActivity.WINDROID_IPC_SOCKET_PATH);
         vars.add("PULSE_LATENCY_MSEC=60");
         vars.add("LD_LIBRARY_PATH=/system/lib64:" + usrDir + "/lib");
         vars.add("PATH=$PATH:" + usrDir + "/bin:" + ratPackagesDir + "/" + selectedWine + "/files/wine/bin:"
@@ -160,10 +160,6 @@ public class EnvVars {
 
         vars.add("ZINK_DEBUG=compact");
         vars.add("ZINK_DESCRIPTORS=lazy");
-
-        if (!enableDRI3) {
-            vars.add("MESA_VK_WSI_DEBUG=sw");
-        }
 
         vars.add("DXVK_ASYNC=1");
         vars.add("DXVK_STATE_CACHE_PATH=" + homeDir + "/.cache/dxvk-shader-cache");

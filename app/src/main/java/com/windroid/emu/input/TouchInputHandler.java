@@ -23,7 +23,6 @@ import android.view.ViewConfiguration;
 import androidx.annotation.IntDef;
 import androidx.core.math.MathUtils;
 
-import com.windroid.emu.LorieView;
 import com.windroid.emu.activities.EmulationActivity;
 
 import java.lang.annotation.Retention;
@@ -199,7 +198,6 @@ public class TouchInputHandler {
         android.util.Log.d("DEVICES", "requesting stylus " + stylusAvailable.get());
         android.util.Log.d("DEVICES", "external keyboard connected " + externalKeyboardAvailable.get());
 
-        LorieView.requestStylusEnabled(stylusAvailable.get());
         externalKeyboardConnected = externalKeyboardAvailable.get();
     }
 

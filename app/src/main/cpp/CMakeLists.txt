@@ -16,8 +16,8 @@ include(CheckSymbolExists)
 include(CheckFunctionExists)
 include(CheckTypeSize)
 
-find_package(Python3 REQUIRED)
-find_package(BISON REQUIRED)
+find_package(Python3 QUIET)
+# find_package(BISON REQUIRED) # Exigência exclusiva do X11 legado desativada
 
 function(target_apply_patch patch_target d p)
     execute_process(COMMAND "bash" "-c" "patch -p1 -d \"${d}\" -i \"${p}\" -R --dry-run > /dev/null 2>&1 || patch -p1 -N -d \"${d}\" -i \"${p}\" -r -")
@@ -78,9 +78,17 @@ foreach (option ${test_compile_options})
 endforeach ()
 set(CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET_OLD})
 
-foreach(project xorgproto fontenc md pixman tirpc xshmfence Xdmcp Xau Xfont2 xkbcomp xserver)
-    include(recipes/${project}.cmake)
-endforeach()
+# O servidor X11 legado (lorie/xserver) foi desativado em favor do gerenciador nativo do Android
+# foreach(project xorgproto fontenc md pixman tirpc xshmfence Xdmcp Xau Xfont2 xkbcomp xserver)
+#     include(recipes/${project}.cmake)
+# endforeach()
 
-add_library(windroid SHARED micewine/shell_loader.c micewine/controller.c fexcore/fex_wrapper.cpp)
+add_library(windroid SHARED
+        micewine/shell_loader.c
+        micewine/controller.c
+        fexcore/fex_wrapper.cpp
+        bridge/native_surface_bridge.c
+        bridge/native_ipc_server.c)
+
+target_include_directories(windroid PRIVATE bridge micewine)
 target_link_libraries(windroid PUBLIC android log)

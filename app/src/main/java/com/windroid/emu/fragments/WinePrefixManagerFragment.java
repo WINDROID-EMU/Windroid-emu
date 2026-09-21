@@ -195,8 +195,7 @@ public class WinePrefixManagerFragment extends Fragment {
 
             wine("regedit '" + driveC + "/Addons/DefaultDLLsOverrides.reg'");
             wine("regedit '" + driveC + "/Addons/Themes/DarkBlue/DarkBlue.reg'");
-            wine("reg add HKCU\\\\Software\\\\Wine\\\\X11\\ Driver /t REG_SZ /v Decorated /d N /f");
-            wine("reg add HKCU\\\\Software\\\\Wine\\\\X11\\ Driver /t REG_SZ /v Managed /d N /f");
+            wine("reg add HKCU\\\\Software\\\\Wine\\\\Drivers /t REG_SZ /v Graphics /d android /f");
             wine("reg add HKCU\\\\Control\\ Panel\\\\Desktop /t REG_DWORD /v LogPixels /d "
                     + (preferences != null ? preferences.getInt(WINE_DPI, WINE_DPI_DEFAULT_VALUE)
                             : WINE_DPI_DEFAULT_VALUE)
