@@ -8,7 +8,9 @@ import static com.windroid.emu.activities.MainActivity.gson;
 import static com.windroid.emu.activities.MainActivity.preferences;
 import static com.windroid.emu.activities.MainActivity.usrDir;
 import static com.windroid.emu.adapters.AdapterGame.selectedGameName;
+import static com.windroid.emu.core.RatPackageManager.getPackageById;
 import static com.windroid.emu.core.RatPackageManager.listRatPackagesId;
+import com.windroid.emu.core.RatPackageManager;
 import static com.windroid.emu.core.WineWrapper.extractIcon;
 import static com.windroid.emu.fragments.DebugSettingsFragment.availableCPUs;
 import static com.windroid.emu.fragments.DeleteItemFragment.DELETE_GAME_ITEM;
@@ -499,7 +501,12 @@ public class ShortcutsFragment extends Fragment {
         if (driverName.startsWith("AdrenoToolsDriver-")) {
             putVulkanDriverType(name, ADRENO_TOOLS_DRIVER);
         } else {
-            putVulkanDriverType(name, MESA_DRIVER);
+            RatPackageManager.RatPackage pkg = getPackageById(driverName);
+            if (pkg != null && pkg.getDriverLib() != null && pkg.getDriverLib().endsWith("libvulkan_freedreno.so")) {
+                putVulkanDriverType(name, ADRENO_TOOLS_DRIVER);
+            } else {
+                putVulkanDriverType(name, MESA_DRIVER);
+            }
         }
 
         saveShortcuts();

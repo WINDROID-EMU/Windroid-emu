@@ -95,7 +95,7 @@ public class EnvVars {
         vars.add("XDG_CONFIG_HOME=" + homeDir + "/.config");
         vars.add("WINDROID_IPC_SOCKET=" + com.windroid.emu.activities.MainActivity.WINDROID_IPC_SOCKET_PATH);
         vars.add("PULSE_LATENCY_MSEC=60");
-        vars.add("LD_LIBRARY_PATH=/system/lib64:" + usrDir + "/lib");
+        vars.add("LD_LIBRARY_PATH=" + usrDir + "/lib:/system/lib64");
         vars.add("PATH=$PATH:" + usrDir + "/bin:" + ratPackagesDir + "/" + selectedWine + "/files/wine/bin:"
                 + ratPackagesDir + "/" + selectedWine + "/files/wine/lib/wine/x86_64-unix:" + ratPackagesDir + "/"
                 + selectedBox64 + "/files/usr/bin");

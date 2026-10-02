@@ -159,6 +159,7 @@ import static com.windroid.emu.fragments.SetupFragment.dialogTitleText;
 import static com.windroid.emu.fragments.WinePrefixManagerFragment.getWinePrefixFile;
 import static com.windroid.emu.utils.AppKiller.killBackgroundApps;
 import static com.windroid.emu.utils.DriveUtils.parseUnixPath;
+import static com.windroid.emu.utils.DriveUtils.parseWindowsPath;
 import static com.windroid.emu.utils.FileUtils.copyRecursively;
 import static com.windroid.emu.utils.FileUtils.deleteDirectoryRecursively;
 import static com.windroid.emu.utils.FileUtils.getFileExtension;
@@ -308,6 +309,26 @@ public class MainActivity extends AppCompatActivity {
 
                     if (driverType == MESA_DRIVER) {
                         driverLibPath = getPackageById(driverName).getDriverLib();
+                        if (driverLibPath != null && driverLibPath.endsWith("libvulkan_freedreno.so")) {
+                            List<RatPackageManager.RatPackage> wrappers = listRatPackages("VulkanDriver");
+                            RatPackageManager.RatPackage wrapperPkg = null;
+                            for (RatPackageManager.RatPackage p : wrappers) {
+                                if (p.getDriverLib() != null && p.getDriverLib().endsWith("libvulkan_wrapper.so")) {
+                                    wrapperPkg = p;
+                                    break;
+                                }
+                            }
+                            if (wrapperPkg != null) {
+                                driverLibPath = wrapperPkg.getDriverLib();
+                            } else {
+                                List<RatPackageManager.RatPackage> adrenoTools = listRatPackages("AdrenoTools");
+                                if (!adrenoTools.isEmpty()) {
+                                    adrenoToolsDriverPath = driverLibPath;
+                                    driverLibPath = adrenoTools.get(0).getDriverLib();
+                                    driverType = ADRENO_TOOLS_DRIVER;
+                                }
+                            }
+                        }
                     } else if (driverType == ADRENO_TOOLS_DRIVER) {
                         try {
                             driverLibPath = listRatPackages("AdrenoTools").get(0).getDriverLib();
@@ -890,8 +911,10 @@ public class MainActivity extends AppCompatActivity {
                     + getCpuHexMask(selectedCpuAffinity) + " TFM");
         } else {
             if (enableWineVirtualDesktop) {
+                String targetPath = (exePath.startsWith(wineDisksFolder.getPath())
+                        ? parseWindowsPath(exePath) : exePath);
                 WineWrapper.wine("explorer /desktop=shell," + selectedResolution + " window_handler.exe "
-                        + getCpuHexMask(selectedCpuAffinity) + " '" + getSanitizedPath(exePath) + "' " + exeArguments,
+                        + getCpuHexMask(selectedCpuAffinity) + " \"" + targetPath + "\" " + exeArguments,
                         "'" + getSanitizedPath(Objects.requireNonNull(new File(exePath).getParent())) + "'");
             } else {
                 new Thread(() -> WineWrapper

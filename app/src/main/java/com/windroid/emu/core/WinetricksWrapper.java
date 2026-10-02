@@ -27,7 +27,7 @@ public class WinetricksWrapper {
                 "export XDG_CONFIG_HOME=" + homeDir + "/.config; " +
                 "export WINDROID_IPC_SOCKET=" + com.windroid.emu.activities.MainActivity.WINDROID_IPC_SOCKET_PATH + "; " +
                 "export PULSE_LATENCY_MSEC=60; " +
-                "export LD_LIBRARY_PATH=/system/lib64:" + usrDir + "/lib; " +
+                "export LD_LIBRARY_PATH=" + usrDir + "/lib:/system/lib64; " +
                 "export PATH=" + usrDir + "/bin:" + box64BinDir + ":$PATH; " +
                 "export PREFIX=" + usrDir + "; " +
                 "export MESA_SHADER_CACHE_DIR=" + homeDir + "/.cache; " +
