@@ -24,6 +24,64 @@ static pthread_t g_server_thread;
 static volatile int g_server_running = 0;
 static char g_socket_path[256] = {0};
 
+static void* client_reader_thread(void* arg) {
+    int fd = (int)(intptr_t)arg;
+    LOGI("Client reader thread started for fd=%d", fd);
+
+    while (g_server_running) {
+        WindroidIpcHeader hdr;
+        ssize_t n = recv(fd, &hdr, sizeof(hdr), MSG_WAITALL);
+        if (n <= 0) {
+            LOGW("Client reader fd=%d disconnected (%s)", fd, strerror(errno));
+            break;
+        }
+
+        if (hdr.magic != WINDROID_IPC_MAGIC) {
+            LOGE("Invalid magic from client fd=%d: 0x%08x", fd, hdr.magic);
+            break;
+        }
+
+        if (hdr.type == WINDROID_MSG_FRAME_PRESENT) {
+            WindroidFramePresentPayload payload;
+            if (hdr.payload_size == sizeof(payload)) {
+                ssize_t pn = recv(fd, &payload, sizeof(payload), MSG_WAITALL);
+                if (pn == sizeof(payload)) {
+                    windroid_present_frame(payload.left, payload.top, payload.right, payload.bottom);
+                }
+            } else if (hdr.payload_size > 0) {
+                char dummy[256];
+                size_t rem = hdr.payload_size;
+                while (rem > 0) {
+                    size_t chunk = rem > sizeof(dummy) ? sizeof(dummy) : rem;
+                    recv(fd, dummy, chunk, 0);
+                    rem -= chunk;
+                }
+            }
+        } else if (hdr.payload_size > 0) {
+            char dummy[256];
+            size_t rem = hdr.payload_size;
+            while (rem > 0) {
+                size_t chunk = rem > sizeof(dummy) ? sizeof(dummy) : rem;
+                recv(fd, dummy, chunk, 0);
+                rem -= chunk;
+            }
+        }
+    }
+
+    pthread_mutex_lock(&g_clients_mutex);
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (g_client_fds[i] == fd) {
+            close(fd);
+            g_client_fds[i] = -1;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&g_clients_mutex);
+
+    LOGI("Client reader thread ended for fd=%d", fd);
+    return NULL;
+}
+
 static void* ipc_server_loop(void* arg) {
     (void)arg;
     LOGI("IPC server loop started on %s", g_socket_path);
@@ -83,6 +141,14 @@ static void* ipc_server_loop(void* arg) {
                     LOGI("Sent initial surface status %dx%d to client fd=%d", w, h, client_fd);
                 }
             }
+
+            // Inicia thread para leitura contínua de mensagens do cliente (ex: frames renderizados)
+            pthread_t client_tid;
+            if (pthread_create(&client_tid, NULL, client_reader_thread, (void*)(intptr_t)client_fd) == 0) {
+                pthread_detach(client_tid);
+            } else {
+                LOGE("Failed to create reader thread for client fd=%d", client_fd);
+            }
         }
     }
 
@@ -120,6 +186,9 @@ int windroid_ipc_start(const char* socket_path) {
 
     strncpy(g_socket_path, socket_path, sizeof(g_socket_path) - 1);
     unlink(g_socket_path);
+
+    // Inicializa a memória compartilhada para o framebuffer
+    windroid_shm_init(socket_path);
 
     g_server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (g_server_fd < 0) {
@@ -183,6 +252,10 @@ void windroid_ipc_stop(void) {
     pthread_mutex_unlock(&g_clients_mutex);
 
     unlink(g_socket_path);
+
+    // Limpa a memória compartilhada
+    windroid_shm_cleanup();
+
     LOGI("Windroid IPC server stopped");
 }
 
@@ -203,6 +276,9 @@ void windroid_ipc_notify_surface_change(int is_valid, int width, int height) {
 }
 
 void windroid_ipc_send_mouse(float x, float y, int button, int is_down, int is_relative, float wheel_dx, float wheel_dy) {
+    // Atualiza a posição do cursor na tela nativa
+    windroid_update_cursor_position(x, y, is_relative);
+
     struct {
         WindroidIpcHeader hdr;
         WindroidMousePayload payload;
@@ -239,6 +315,9 @@ void windroid_ipc_send_keyboard(int scan_code, int key_code, int is_down) {
 }
 
 void windroid_ipc_send_touch(int action, int pointer_id, float x, float y) {
+    // Toques também atualizam a posição do cursor
+    windroid_update_cursor_position(x, y, 0);
+
     struct {
         WindroidIpcHeader hdr;
         WindroidTouchPayload payload;

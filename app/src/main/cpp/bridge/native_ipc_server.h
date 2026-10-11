@@ -17,7 +17,8 @@ enum WindroidMessageType {
     WINDROID_MSG_INPUT_KEYBOARD = 4,
     WINDROID_MSG_INPUT_TOUCH = 5,
     WINDROID_MSG_SET_RESOLUTION = 6,
-    WINDROID_MSG_CLIPBOARD = 7
+    WINDROID_MSG_CLIPBOARD = 7,
+    WINDROID_MSG_FRAME_PRESENT = 8
 };
 
 #pragma pack(push, 1)
@@ -61,6 +62,14 @@ typedef struct {
     int32_t width;
     int32_t height;
 } WindroidResolutionPayload;
+
+typedef struct {
+    int32_t left;
+    int32_t top;
+    int32_t right;
+    int32_t bottom;
+    uint32_t flags;
+} WindroidFramePresentPayload;
 
 #pragma pack(pop)
 

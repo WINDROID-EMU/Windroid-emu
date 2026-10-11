@@ -1097,6 +1097,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("SdCardPath")
     public static final File appRootDir = new File("/data/data/com.windroid.emu/files");
     public static final String WINDROID_IPC_SOCKET_PATH = appRootDir.getPath() + "/ipc.sock";
+    public static final String WINDROID_SHM_PATH = appRootDir.getPath() + "/ipc.shm";
     public static File ratPackagesDir = new File(appRootDir + "/packages");
     public static String deviceArch = Build.SUPPORTED_ABIS[0].replace("arm64-v8a", "aarch64");
     private static String unixUsername = null;
