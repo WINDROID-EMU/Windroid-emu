@@ -576,6 +576,8 @@ public class EmulationActivity extends AppCompatActivity implements View.OnApply
 
     @Override
     protected void onDestroy() {
+        stopInputServer();
+
         // Only unregister if it was actually registered
         if (isReceiverRegistered) {
             unregisterReceiver(receiver);

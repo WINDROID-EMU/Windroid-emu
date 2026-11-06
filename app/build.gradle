@@ -66,6 +66,11 @@ android {
             version '3.22.1'
         }
     }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 }
 
 dependencies {

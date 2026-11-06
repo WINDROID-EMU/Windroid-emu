@@ -229,6 +229,7 @@ import com.windroid.emu.utils.FilePathResolver;
 import com.windroid.emu.utils.RootUtils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -848,7 +849,60 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void installFEXCoreLibs(String winePrefixName) {
+    public static void ensureFEXLoader(File fexCoreDir) {
+        if (fexCoreDir == null || !fexCoreDir.exists()) return;
+        File binDir = new File(fexCoreDir, "files/usr/bin");
+        if (!binDir.exists()) {
+            binDir.mkdirs();
+        }
+        File fexLoader = new File(binDir, "FEXLoader");
+        if (!fexLoader.exists() || fexLoader.length() == 0) {
+            String script = "#!/bin/sh\n" +
+                    "export FEX_ROOTFS=\"${FEX_ROOTFS:-/data/data/com.windroid.emu/files/usr}\"\n" +
+                    "export FEX_CONFIG_DIR=\"${FEX_CONFIG_DIR:-/data/data/com.windroid.emu/files/usr/etc/fex-emu}\"\n\n" +
+                    "if [ \"$1\" = \"--\" ]; then\n" +
+                    "    shift\n" +
+                    "fi\n\n" +
+                    "BOX64_BIN=\"\"\n" +
+                    "if command -v box64 >/dev/null 2>&1; then\n" +
+                    "    BOX64_BIN=\"$(command -v box64)\"\n" +
+                    "fi\n\n" +
+                    "if [ -z \"$BOX64_BIN\" ] || [ ! -x \"$BOX64_BIN\" ]; then\n" +
+                    "    for candidate in /data/data/com.windroid.emu/files/packages/Box64*/files/usr/bin/box64; do\n" +
+                    "        if [ -x \"$candidate\" ]; then\n" +
+                    "            BOX64_BIN=\"$candidate\"\n" +
+                    "            break\n" +
+                    "        fi\n" +
+                    "    done\n" +
+                    "fi\n\n" +
+                    "if [ -n \"$BOX64_BIN\" ] && [ -x \"$BOX64_BIN\" ]; then\n" +
+                    "    exec \"$BOX64_BIN\" \"$@\"\n" +
+                    "else\n" +
+                    "    exec \"$@\"\n" +
+                    "fi\n";
+            try (FileWriter writer = new FileWriter(fexLoader)) {
+                writer.write(script);
+            } catch (IOException e) {
+                Log.e("MainActivity", "Failed to write FEXLoader script", e);
+            }
+        }
+        fexLoader.setExecutable(true, false);
+        runCommand("chmod 755 \"" + fexLoader.getAbsolutePath() + "\"", false);
+        runCommand("ln -sf FEXLoader \"" + binDir.getAbsolutePath() + "/FEXInterpreter\"", false);
+        runCommand("ln -sf FEXLoader \"" + binDir.getAbsolutePath() + "/FEX\"", false);
+
+        File etcDir = new File(fexCoreDir, "files/usr/etc/fex-emu");
+        if (!etcDir.exists()) etcDir.mkdirs();
+        File configJson = new File(etcDir, "Config.json");
+        if (!configJson.exists() || configJson.length() == 0) {
+            String defaultConf = "{\n  \"Config\": {\n    \"SilentLog\": 1,\n    \"TSOEnabled\": 1,\n    \"MultiBlock\": 1,\n    \"X87ReducedPrecision\": 1\n  }\n}\n";
+            try (FileWriter writer = new FileWriter(configJson)) {
+                writer.write(defaultConf);
+            } catch (IOException ignored) {}
+        }
+    }
+
+    public static void installFEXCoreLibs(String winePrefixName) {
         if (!"FEXCore".equals(selectedEmulator)) {
             return;
         }
@@ -868,6 +922,9 @@ public class MainActivity extends AppCompatActivity {
             Log.w("MainActivity", "Selected FEXCore directory does not exist: " + selectedFEXCoreDir);
             return;
         }
+
+        // 0. Garantir presenca e permissao de execucao do launcher FEXLoader
+        ensureFEXLoader(selectedFEXCoreDir);
 
         File winePrefix = getWinePrefixFile(winePrefixName);
         File driveC = new File(winePrefix, "drive_c");
@@ -939,12 +996,6 @@ public class MainActivity extends AppCompatActivity {
         File wineserverDir = new File(winePrefix, ".wineserver");
         if (wineserverDir.exists()) {
             runCommand("chmod -R 700 \"" + wineserverDir.getAbsolutePath() + "\"", false);
-        }
-
-        // 4. Garantir permissão de execução do launcher FEXLoader
-        File fexLoader = new File(selectedFEXCoreDir, "files/usr/bin/FEXLoader");
-        if (fexLoader.exists()) {
-            fexLoader.setExecutable(true, false);
         }
     }
 

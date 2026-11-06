@@ -1,5 +1,6 @@
 #include <android/log.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <jni.h>
 #include <math.h>
 #include <pthread.h>
@@ -54,11 +55,11 @@ static bool vibrationEnabled = true;
 static int currentVibrationIntensity = 0;
 
 static void thread_signal_handler(__unused int signum) {
-  pthread_exit(NULL);
   if (sockfd >= 0) {
     close(sockfd);
     sockfd = -1;
   }
+  pthread_exit(NULL);
 }
 
 void *controller_update_thread(__unused void *param) {
@@ -75,16 +76,20 @@ void *controller_update_thread(__unused void *param) {
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sockfd < 0) {
     log(ERROR, "Error on creating server.");
+    inputServerRunning = 0;
     pthread_exit(NULL);
   }
+
+  fcntl(sockfd, F_SETFD, FD_CLOEXEC);
 
   int optval = 1;
   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) <
       0) {
     log(ERROR, "Failed to set SO_REUSEADDR");
-    close(sockfd);
-    pthread_exit(NULL);
   }
+#ifdef SO_REUSEPORT
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
+#endif
 
   memset(&serverAddr, 0, sizeof(serverAddr));
   serverAddr.sin_family = AF_INET;
@@ -94,6 +99,8 @@ void *controller_update_thread(__unused void *param) {
   if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
     log(ERROR, "Error on binding.");
     close(sockfd);
+    sockfd = -1;
+    inputServerRunning = 0;
     pthread_exit(NULL);
   }
 
@@ -216,7 +223,13 @@ Java_com_windroid_emu_controller_ControllerUtils_startInputServer(
 JNIEXPORT void JNICALL
 Java_com_windroid_emu_controller_ControllerUtils_stopInputServer(
     __unused JNIEnv *env, __unused jobject cls) {
+  if (!inputServerRunning)
+    return;
   inputServerRunning = false;
+  if (sockfd >= 0) {
+    close(sockfd);
+    sockfd = -1;
+  }
   pthread_kill(controller_thread_id, SIGUSR2);
   pthread_join(controller_thread_id, NULL);
 }

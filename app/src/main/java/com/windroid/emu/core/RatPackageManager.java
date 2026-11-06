@@ -4,6 +4,7 @@ import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_BOX64
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_FEXCORE;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_VULKAN_DRIVER;
 import static com.windroid.emu.activities.MainActivity.appRootDir;
+import static com.windroid.emu.activities.MainActivity.ensureFEXLoader;
 import static com.windroid.emu.activities.MainActivity.gson;
 import static com.windroid.emu.activities.MainActivity.preferences;
 import static com.windroid.emu.activities.MainActivity.ratPackagesDir;
@@ -309,10 +310,7 @@ public class RatPackageManager {
                     }
                 }
 
-                File fexLoader = new File(extractDir, "files/usr/bin/FEXLoader");
-                if (fexLoader.exists()) {
-                    fexLoader.setExecutable(true, false);
-                }
+                ensureFEXLoader(new File(extractDir));
             }
             case "VulkanDriver", "AdrenoTools" -> {
                 if (preferences != null) {

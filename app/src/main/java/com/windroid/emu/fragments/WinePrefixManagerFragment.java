@@ -5,6 +5,7 @@ import static com.windroid.emu.activities.GeneralSettingsActivity.WINE_DPI;
 import static com.windroid.emu.activities.GeneralSettingsActivity.WINE_DPI_DEFAULT_VALUE;
 import static com.windroid.emu.activities.MainActivity.appRootDir;
 import static com.windroid.emu.activities.MainActivity.preferences;
+import static com.windroid.emu.activities.MainActivity.selectedEmulator;
 import static com.windroid.emu.activities.MainActivity.selectedWine;
 import static com.windroid.emu.activities.MainActivity.getUnixUsername;
 import static com.windroid.emu.activities.MainActivity.winePrefix;
@@ -147,6 +148,10 @@ public class WinePrefixManagerFragment extends Fragment {
 
             selectedWine = wineId;
 
+            if ("FEXCore".equals(selectedEmulator)) {
+                com.windroid.emu.activities.MainActivity.installFEXCoreLibs(name);
+            }
+
             killAll();
             wine("wineboot");
 
@@ -192,6 +197,10 @@ public class WinePrefixManagerFragment extends Fragment {
             copyRecursively(new File(wineUtils, "DirectX/x32"), syswow64);
             copyRecursively(new File(wineUtils, "OpenAL/x64"), system32);
             copyRecursively(new File(wineUtils, "OpenAL/x32"), syswow64);
+
+            if ("FEXCore".equals(selectedEmulator)) {
+                com.windroid.emu.activities.MainActivity.installFEXCoreLibs(name);
+            }
 
             wine("regedit '" + driveC + "/Addons/DefaultDLLsOverrides.reg'");
             wine("regedit '" + driveC + "/Addons/Themes/DarkBlue/DarkBlue.reg'");
