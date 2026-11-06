@@ -308,6 +308,11 @@ public class RatPackageManager {
                         Log.e(TAG, "Failed to write pkg-external", e);
                     }
                 }
+
+                File fexLoader = new File(extractDir, "files/usr/bin/FEXLoader");
+                if (fexLoader.exists()) {
+                    fexLoader.setExecutable(true, false);
+                }
             }
             case "VulkanDriver", "AdrenoTools" -> {
                 if (preferences != null) {

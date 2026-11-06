@@ -848,6 +848,106 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void installFEXCoreLibs(String winePrefixName) {
+        if (!"FEXCore".equals(selectedEmulator)) {
+            return;
+        }
+
+        if (selectedFEXCore == null || selectedFEXCore.isEmpty()) {
+            List<RatPackageManager.RatPackage> fexPackages = listRatPackages("FEXCore");
+            if (!fexPackages.isEmpty()) {
+                selectedFEXCore = fexPackages.get(0).getFolderName();
+            } else {
+                Log.w("MainActivity", "No FEXCore package found for FEXCore emulator");
+                return;
+            }
+        }
+
+        File selectedFEXCoreDir = new File(ratPackagesDir, selectedFEXCore);
+        if (!selectedFEXCoreDir.exists()) {
+            Log.w("MainActivity", "Selected FEXCore directory does not exist: " + selectedFEXCoreDir);
+            return;
+        }
+
+        File winePrefix = getWinePrefixFile(winePrefixName);
+        File driveC = new File(winePrefix, "drive_c");
+        File system32 = new File(driveC, "windows/system32");
+        File syswow64 = new File(driveC, "windows/syswow64");
+
+        File selectedWineDir = (selectedWine != null && !selectedWine.isEmpty())
+                ? new File(ratPackagesDir, selectedWine)
+                : null;
+
+        // 1. Instalar bibliotecas Unix (.so) para o Wine (aarch64-unix)
+        if (selectedWineDir != null && selectedWineDir.exists()) {
+            File wineAarch64Unix = new File(selectedWineDir, "files/wine/lib/wine/aarch64-unix");
+            if (!wineAarch64Unix.exists()) {
+                wineAarch64Unix.mkdirs();
+            }
+
+            File[] candidateUnixDirs = new File[] {
+                new File(selectedFEXCoreDir, "files/usr/lib/wine/aarch64-unix"),
+                new File(selectedFEXCoreDir, "files/aarch64-unix"),
+                new File(selectedFEXCoreDir, "aarch64-unix")
+            };
+            for (File candidate : candidateUnixDirs) {
+                if (candidate.exists() && candidate.isDirectory()) {
+                    copyRecursively(candidate, wineAarch64Unix);
+                    break;
+                }
+            }
+
+            // DLLs nas pastas de arquitetura do Wine
+            File wineAarch64Win = new File(selectedWineDir, "files/wine/lib/wine/aarch64-windows");
+            File wineX8664Win = new File(selectedWineDir, "files/wine/lib/wine/x86_64-windows");
+            if (!wineAarch64Win.exists()) wineAarch64Win.mkdirs();
+            if (!wineX8664Win.exists()) wineX8664Win.mkdirs();
+
+            File[] candidateWinDirs = new File[] {
+                new File(selectedFEXCoreDir, "files/usr/lib/wine/aarch64-windows"),
+                new File(selectedFEXCoreDir, "files/system32"),
+                new File(selectedFEXCoreDir, "system32")
+            };
+            for (File candidate : candidateWinDirs) {
+                if (candidate.exists() && candidate.isDirectory()) {
+                    copyRecursively(candidate, wineAarch64Win);
+                    copyRecursively(candidate, wineX8664Win);
+                    break;
+                }
+            }
+        }
+
+        // 2. Instalar DLLs do Windows (.dll) no prefixo (system32 e syswow64)
+        File[] candidateDllDirs = new File[] {
+            new File(selectedFEXCoreDir, "files/usr/lib/wine/aarch64-windows"),
+            new File(selectedFEXCoreDir, "files/system32"),
+            new File(selectedFEXCoreDir, "system32")
+        };
+        for (File candidate : candidateDllDirs) {
+            if (candidate.exists() && candidate.isDirectory()) {
+                if (system32.exists()) {
+                    copyRecursively(candidate, system32);
+                }
+                if (syswow64.exists()) {
+                    copyRecursively(candidate, syswow64);
+                }
+                break;
+            }
+        }
+
+        // 3. Garantir que a pasta interna de sockets do wineserver seja 0700 (requisito de segurança do Wine)
+        File wineserverDir = new File(winePrefix, ".wineserver");
+        if (wineserverDir.exists()) {
+            runCommand("chmod -R 700 \"" + wineserverDir.getAbsolutePath() + "\"", false);
+        }
+
+        // 4. Garantir permissão de execução do launcher FEXLoader
+        File fexLoader = new File(selectedFEXCoreDir, "files/usr/bin/FEXLoader");
+        if (fexLoader.exists()) {
+            fexLoader.setExecutable(true, false);
+        }
+    }
+
     private void runWine(String exePath, String exeArguments) {
         // Verificar se é um comando do winetricks (atalho do menu Iniciar)
         if (WineWrapper.isWinetricksCommand(exePath)) {
@@ -873,6 +973,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         installDXWrapper(winePrefix);
+        installFEXCoreLibs(winePrefix);
         setupUserLinks(winePrefix);
 
         boolean changedDpi = !(preferences.getBoolean(WINE_DPI_APPLIED, WINE_DPI_APPLIED_DEFAULT_VALUE));
