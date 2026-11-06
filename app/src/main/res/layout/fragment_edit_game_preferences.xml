@@ -851,32 +851,100 @@
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:text="@string/selected_box64">
+                android:text="@string/emulator_title">
             </TextView>
 
             <Spinner
-                android:id="@+id/selectedBox64"
+                android:id="@+id/selectedEmulator"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp">
             </Spinner>
 
-            <TextView
-                android:layout_marginTop="20dp"
-                android:layout_marginStart="4dp"
+            <LinearLayout
+                android:id="@+id/layoutBox64Settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:text="@string/selected_box64_profile">
-            </TextView>
+                android:orientation="vertical">
 
-            <Spinner
-                android:id="@+id/selectedBox64Profile"
+                <TextView
+                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:text="@string/selected_box64">
+                </TextView>
+
+                <Spinner
+                    android:id="@+id/selectedBox64"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+                </Spinner>
+
+                <TextView
+                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:text="@string/selected_box64_profile">
+                </TextView>
+
+                <Spinner
+                    android:id="@+id/selectedBox64Profile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+                </Spinner>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutFEXCoreSettings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
-            </Spinner>
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:text="@string/selected_fexcore">
+                </TextView>
+
+                <Spinner
+                    android:id="@+id/selectedFEXCore"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+                </Spinner>
+
+                <TextView
+                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:text="@string/selected_fexcore_profile">
+                </TextView>
+
+                <Spinner
+                    android:id="@+id/selectedFEXCoreProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+                </Spinner>
+
+            </LinearLayout>
 
         </LinearLayout>
 

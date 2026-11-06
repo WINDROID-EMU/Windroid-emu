@@ -44,6 +44,20 @@ public class FileUtils {
         }
     }
 
+    public static void deleteDirectoryContents(File directory) {
+        if (directory == null || !directory.exists()) return;
+        try {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteDirectoryRecursively(file.toPath());
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to delete contents of directory: " + directory, e);
+        }
+    }
+
     public static void deleteDirectoryRecursively(Path directory) {
         if (!Files.exists(directory)) return;
 

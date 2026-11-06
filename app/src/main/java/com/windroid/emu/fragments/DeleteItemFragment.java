@@ -6,8 +6,10 @@ import static com.windroid.emu.adapters.AdapterGame.selectedGameName;
 import static com.windroid.emu.adapters.AdapterPreset.clickedPresetName;
 import static com.windroid.emu.adapters.AdapterPreset.clickedPresetType;
 import static com.windroid.emu.fragments.Box64PresetManagerFragment.deleteBox64Preset;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.deleteFEXCorePreset;
 import static com.windroid.emu.fragments.ControllerPresetManagerFragment.deleteControllerPreset;
 import static com.windroid.emu.fragments.CreatePresetFragment.BOX64_PRESET;
+import static com.windroid.emu.fragments.CreatePresetFragment.FEXCORE_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.VIRTUAL_CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.WINE_PREFIX_PRESET;
@@ -69,6 +71,12 @@ public class DeleteItemFragment extends DialogFragment {
                         }
                         case BOX64_PRESET: {
                             if (!deleteBox64Preset(clickedPresetName)) {
+                                Toast.makeText(requireContext(), R.string.remove_last_preset_error, Toast.LENGTH_SHORT).show();
+                            }
+                            break;
+                        }
+                        case FEXCORE_PRESET: {
+                            if (!deleteFEXCorePreset(clickedPresetName)) {
                                 Toast.makeText(requireContext(), R.string.remove_last_preset_error, Toast.LENGTH_SHORT).show();
                             }
                             break;

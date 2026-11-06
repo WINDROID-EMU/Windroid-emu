@@ -5,21 +5,35 @@ import static com.windroid.emu.activities.MainActivity.deviceArch;
 import static com.windroid.emu.activities.MainActivity.homeDir;
 import static com.windroid.emu.activities.MainActivity.ratPackagesDir;
 import static com.windroid.emu.activities.MainActivity.selectedBox64;
+import static com.windroid.emu.activities.MainActivity.selectedEmulator;
+import static com.windroid.emu.activities.MainActivity.selectedFEXCore;
 import static com.windroid.emu.activities.MainActivity.selectedWine;
 import static com.windroid.emu.activities.MainActivity.usrDir;
 import static com.windroid.emu.activities.MainActivity.winePrefix;
 import static com.windroid.emu.activities.MainActivity.winePrefixesDir;
+import static com.windroid.emu.core.WineWrapper.getEmulatorRunner;
 import static com.windroid.emu.core.ShellLoader.runCommand;
 
 public class WinetricksWrapper {
-    private static final String IS_BOX64 = deviceArch.equals("x86_64") ? "" : "box64";
+    public static final String IS_BOX64 = deviceArch.equals("x86_64") ? "" : "box64";
 
     public static int winetricks(String args) {
         return winetricks(args, null);
     }
 
     private static String getEnv() {
-        String box64BinDir = ratPackagesDir + "/" + selectedBox64 + "/files/usr/bin";
+        String emulatorBinDir;
+        String emulatorEnv;
+
+        if ("FEXCore".equals(selectedEmulator)) {
+            emulatorBinDir = ratPackagesDir + "/" + selectedFEXCore + "/files/usr/bin";
+            emulatorEnv = "export FEX_ROOTFS=" + usrDir + "; " +
+                    "export FEX_SILENTLOG=1; ";
+        } else {
+            emulatorBinDir = ratPackagesDir + "/" + selectedBox64 + "/files/usr/bin";
+            emulatorEnv = "export BOX64_LOG=0; " +
+                    "export BOX64_NOBANNER=1; ";
+        }
 
         return "export LANG=" + appLang + ".UTF-8; " +
                 "export TMPDIR=" + usrDir + "/tmp; " +
@@ -28,7 +42,7 @@ public class WinetricksWrapper {
                 "export DISPLAY=:0; " +
                 "export PULSE_LATENCY_MSEC=60; " +
                 "export LD_LIBRARY_PATH=/system/lib64:" + usrDir + "/lib; " +
-                "export PATH=" + usrDir + "/bin:" + box64BinDir + ":$PATH; " +
+                "export PATH=" + usrDir + "/bin:" + emulatorBinDir + ":$PATH; " +
                 "export PREFIX=" + usrDir + "; " +
                 "export MESA_SHADER_CACHE_DIR=" + homeDir + "/.cache; " +
                 "export MESA_VK_WSI_PRESENT_MODE=mailbox; " +
@@ -40,8 +54,7 @@ public class WinetricksWrapper {
                 "export ZINK_DEBUG=compact; " +
                 "export ZINK_DESCRIPTORS=lazy; " +
                 "export WINEDEBUG=-all; " +
-                "export BOX64_LOG=0; " +
-                "export BOX64_NOBANNER=1; ";
+                emulatorEnv;
     }
 
     public static int winetricks(String args, String cwd) {
@@ -57,7 +70,8 @@ public class WinetricksWrapper {
         String realWineserver = wineBinDir + "/wineserver";
         String realWineboot = wineBinDir + "/wineboot";
 
-        String prefix = IS_BOX64.isEmpty() ? "" : IS_BOX64 + " ";
+        String runner = getEmulatorRunner();
+        String prefix = runner.isEmpty() ? "" : runner + " ";
 
         String setupWrappers = "echo '#!/system/bin/sh' > " + wineWrapper + "; " +
                 "echo 'exec " + prefix + realWine + " \"$@\"' >> " + wineWrapper + "; " +

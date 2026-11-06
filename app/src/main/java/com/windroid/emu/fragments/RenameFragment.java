@@ -4,8 +4,10 @@ import static com.windroid.emu.activities.MainActivity.selectedFilePath;
 import static com.windroid.emu.adapters.AdapterPreset.clickedPresetName;
 import static com.windroid.emu.adapters.AdapterPreset.clickedPresetType;
 import static com.windroid.emu.fragments.Box64PresetManagerFragment.renameBox64Preset;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.renameFEXCorePreset;
 import static com.windroid.emu.fragments.ControllerPresetManagerFragment.renameControllerPreset;
 import static com.windroid.emu.fragments.CreatePresetFragment.BOX64_PRESET;
+import static com.windroid.emu.fragments.CreatePresetFragment.FEXCORE_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.VIRTUAL_CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.FileManagerFragment.renameFile;
@@ -59,6 +61,7 @@ public class RenameFragment extends DialogFragment {
                         case CONTROLLER_PRESET -> renameControllerPreset(clickedPresetName, newName);
                         case VIRTUAL_CONTROLLER_PRESET -> renameVirtualControllerPreset(clickedPresetName, newName);
                         case BOX64_PRESET -> renameBox64Preset(clickedPresetName, newName);
+                        case FEXCORE_PRESET -> renameFEXCorePreset(clickedPresetName, newName);
                     }
                 }
                 case RENAME_FILE -> {

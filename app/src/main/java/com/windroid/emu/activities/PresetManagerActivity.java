@@ -2,6 +2,7 @@ package com.windroid.emu.activities;
 
 import static android.os.Build.VERSION.SDK_INT;
 import static com.windroid.emu.fragments.CreatePresetFragment.BOX64_PRESET;
+import static com.windroid.emu.fragments.CreatePresetFragment.FEXCORE_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.VIRTUAL_CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.WINE_PREFIX_PRESET;
@@ -31,6 +32,8 @@ import com.windroid.emu.R;
 import com.windroid.emu.databinding.ActivityPresetManagerBinding;
 import com.windroid.emu.fragments.Box64PresetManagerFragment;
 import com.windroid.emu.fragments.Box64SettingsFragment;
+import com.windroid.emu.fragments.FEXCorePresetManagerFragment;
+import com.windroid.emu.fragments.FEXCoreSettingsFragment;
 import com.windroid.emu.fragments.ControllerMapperFragment;
 import com.windroid.emu.fragments.ControllerPresetManagerFragment;
 import com.windroid.emu.fragments.CreatePresetFragment;
@@ -51,6 +54,11 @@ public class PresetManagerActivity extends AppCompatActivity {
                 importPresetFAB.setVisibility(View.GONE);
             } else if (ACTION_EDIT_BOX64_PRESET.equals(intent.getAction())) {
                 fragmentLoader(new Box64SettingsFragment(), false);
+
+                addPresetFAB.setVisibility(View.GONE);
+                importPresetFAB.setVisibility(View.GONE);
+            } else if (ACTION_EDIT_FEXCORE_PRESET.equals(intent.getAction())) {
+                fragmentLoader(new FEXCoreSettingsFragment(), false);
 
                 addPresetFAB.setVisibility(View.GONE);
                 importPresetFAB.setVisibility(View.GONE);
@@ -110,6 +118,17 @@ public class PresetManagerActivity extends AppCompatActivity {
                     new FloatingFileManagerFragment(OPERATION_IMPORT_PRESET, "/storage/emulated/0").show(getSupportFragmentManager(), "");
                 });
             }
+            case FEXCORE_PRESET -> {
+                fragmentLoader(new FEXCorePresetManagerFragment(), true);
+
+                controllerMapperToolbar.setTitle(R.string.fexcore_preset_manager_title);
+
+                addPresetFAB.setOnClickListener((v) -> new CreatePresetFragment(FEXCORE_PRESET).show(getSupportFragmentManager(), ""));
+                importPresetFAB.setOnClickListener((v) -> {
+                    clickedPresetType = FEXCORE_PRESET;
+                    new FloatingFileManagerFragment(OPERATION_IMPORT_PRESET, "/storage/emulated/0").show(getSupportFragmentManager(), "");
+                });
+            }
             case WINE_PREFIX_PRESET -> {
                 fragmentLoader(new WinePrefixManagerFragment(), true);
 
@@ -123,6 +142,7 @@ public class PresetManagerActivity extends AppCompatActivity {
         androidx.core.content.ContextCompat.registerReceiver(this, receiver, new IntentFilter() {{
             addAction(ACTION_EDIT_CONTROLLER_MAPPING);
             addAction(ACTION_EDIT_BOX64_PRESET);
+            addAction(ACTION_EDIT_FEXCORE_PRESET);
         }}, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
@@ -203,4 +223,5 @@ public class PresetManagerActivity extends AppCompatActivity {
 
     public static String ACTION_EDIT_CONTROLLER_MAPPING = "com.windroid.emu.ACTION_EDIT_CONTROLLER_MAPPING";
     public static String ACTION_EDIT_BOX64_PRESET = "com.windroid.emu.ACTION_EDIT_BOX64_PRESET";
+    public static String ACTION_EDIT_FEXCORE_PRESET = "com.windroid.emu.ACTION_EDIT_FEXCORE_PRESET";
 }

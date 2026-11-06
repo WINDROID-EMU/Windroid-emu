@@ -22,6 +22,18 @@ import static com.windroid.emu.activities.GeneralSettingsActivity.PA_SINK_DEFAUL
 import static com.windroid.emu.activities.GeneralSettingsActivity.PERF_MODE_ROOT;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELINUX_PERMISSIVE_ROOT;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_BOX64;
+import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_EMULATOR;
+import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_FEXCORE;
+import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_FEXCORE_PRESET;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.getFEXMultiBlock;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.getFEXSilentLog;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.getFEXSmcChecks;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.getFEXTsoEnabled;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.getFEXVectorWidth;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.getFEXX87ReducedPrecision;
+import static com.windroid.emu.fragments.ShortcutsFragment.getEmulator;
+import static com.windroid.emu.fragments.ShortcutsFragment.getFEXCorePreset;
+import static com.windroid.emu.fragments.ShortcutsFragment.getFEXCoreVersion;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_DXVK_HUD_PRESET;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_DXVK_HUD_PRESET_DEFAULT_VALUE;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_GL_PROFILE;
@@ -160,6 +172,7 @@ import static com.windroid.emu.fragments.WinePrefixManagerFragment.getWinePrefix
 import static com.windroid.emu.utils.AppKiller.killBackgroundApps;
 import static com.windroid.emu.utils.DriveUtils.parseUnixPath;
 import static com.windroid.emu.utils.FileUtils.copyRecursively;
+import static com.windroid.emu.utils.FileUtils.deleteDirectoryContents;
 import static com.windroid.emu.utils.FileUtils.deleteDirectoryRecursively;
 import static com.windroid.emu.utils.FileUtils.getFileExtension;
 
@@ -244,6 +257,9 @@ public class MainActivity extends AppCompatActivity {
                     String exeArguments = intent.getStringExtra("exeArguments");
                     String driverName = intent.getStringExtra("driverName");
                     int driverType = intent.getIntExtra("driverType", MESA_DRIVER);
+                    String emulator = intent.getStringExtra("emulator");
+                    String fexCoreVersion = intent.getStringExtra("fexCoreVersion");
+                    String fexCorePreset = intent.getStringExtra("fexCorePreset");
                     String box64Version = intent.getStringExtra("box64Version");
                     String box64Preset = intent.getStringExtra("box64Preset");
                     String displayResolution = intent.getStringExtra("displayResolution");
@@ -295,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
                     if (vramLimit == null)
                         vramLimit = "Auto";
 
-                    deleteDirectoryRecursively(tmpDir.toPath());
+                    deleteDirectoryContents(tmpDir);
                     tmpDir.mkdirs();
 
                     if (driverName.equals("Global")) {
@@ -349,6 +365,9 @@ public class MainActivity extends AppCompatActivity {
 
                     setSharedVars(
                             MainActivity.this,
+                            emulator,
+                            fexCoreVersion,
+                            fexCorePreset,
                             box64Version,
                             box64Preset,
                             d3dxRenderer,
@@ -1124,6 +1143,14 @@ public class MainActivity extends AppCompatActivity {
     public static Integer box64NoSigill = null;
     public static String wineLogLevel = null;
     public static String selectedBox64 = null;
+    public static String selectedEmulator = "Box64";
+    public static String selectedFEXCore = null;
+    public static boolean fexTsoEnabled = true;
+    public static boolean fexMultiBlock = true;
+    public static boolean fexX87ReducedPrecision = false;
+    public static boolean fexSilentLog = true;
+    public static String fexSmcChecks = "app";
+    public static String fexVectorWidth = "128";
     public static String selectedD3DXRenderer = null;
     public static String selectedWineD3D = null;
     public static String selectedDXVK = null;
@@ -1234,14 +1261,87 @@ public class MainActivity extends AppCompatActivity {
             String vramLimit,
             Boolean afme,
             String adrenoToolsDriverPath) {
+        setSharedVars(
+                activity,
+                null,
+                null,
+                null,
+                box64Version,
+                box64Preset,
+                d3dxRenderer,
+                wineD3D,
+                dxvk,
+                vkd3d,
+                displayResolution,
+                esync,
+                services,
+                virtualDesktop,
+                enableXInputController,
+                enableDInputController,
+                cpuAffinity,
+                vramLimit,
+                afme,
+                adrenoToolsDriverPath);
+    }
+
+    public static void setSharedVars(
+            Activity activity,
+            String emulator,
+            String fexCoreVersion,
+            String fexCorePreset,
+            String box64Version,
+            String box64Preset,
+            String d3dxRenderer,
+            String wineD3D,
+            String dxvk,
+            String vkd3d,
+            String displayResolution,
+            Boolean esync,
+            Boolean services,
+            Boolean virtualDesktop,
+            Boolean enableXInputController,
+            Boolean enableDInputController,
+            String cpuAffinity,
+            String vramLimit,
+            Boolean afme,
+            String adrenoToolsDriverPath) {
         useAdrenoTools = (adrenoToolsDriverPath != null);
         adrenoToolsDriverFile = (adrenoToolsDriverPath != null ? new File(adrenoToolsDriverPath) : null);
 
         appLang = activity.getResources().getString(R.string.app_lang);
 
+        if (emulator != null && !emulator.equals("Global")) {
+            selectedEmulator = emulator;
+        } else {
+            String gameEmulator = getEmulator(selectedGameName);
+            if ("Global".equals(gameEmulator) || gameEmulator == null) {
+                selectedEmulator = preferences.getString(SELECTED_EMULATOR, "Box64");
+            } else {
+                selectedEmulator = gameEmulator;
+            }
+        }
+
+        selectedFEXCore = (fexCoreVersion != null ? fexCoreVersion : getFEXCoreVersion(selectedGameName));
+        if ("Global".equals(selectedFEXCore) || selectedFEXCore == null || selectedFEXCore.isEmpty()) {
+            selectedFEXCore = preferences.getString(SELECTED_FEXCORE, "");
+        }
+        if (selectedFEXCore.isEmpty()) {
+            List<RatPackageManager.RatPackage> fexPackages = listRatPackages("FEXCore");
+            if (!fexPackages.isEmpty()) {
+                selectedFEXCore = fexPackages.get(0).getFolderName();
+            }
+        }
+        setFEXCorePreset((fexCorePreset != null && !fexCorePreset.equals("default")) ? fexCorePreset : getFEXCorePreset(selectedGameName));
+
         selectedBox64 = (box64Version != null ? box64Version : getBox64Version(selectedGameName));
-        if ("Global".equals(selectedBox64)) {
+        if ("Global".equals(selectedBox64) || selectedBox64 == null || selectedBox64.isEmpty()) {
             selectedBox64 = preferences.getString(SELECTED_BOX64, "");
+        }
+        if (selectedBox64.isEmpty()) {
+            List<RatPackageManager.RatPackage> box64Packages = listRatPackages("Box64");
+            if (!box64Packages.isEmpty()) {
+                selectedBox64 = box64Packages.get(0).getFolderName();
+            }
         }
 
         box64LogLevel = preferences.getString(BOX64_LOG, String.valueOf(BOX64_LOG_DEFAULT_VALUE));
@@ -1349,6 +1449,18 @@ public class MainActivity extends AppCompatActivity {
         box64DynarecDirty = getBox64Dirty(selectedBox64Preset);
         box64DynarecForward = getBox64Forward(selectedBox64Preset);
         box64DynarecDF = strBoolToNum(getBox64DF(selectedBox64Preset));
+    }
+
+    public static void setFEXCorePreset(String fexPreset) {
+        String selectedFEXPreset = ((fexPreset != null && !fexPreset.equals("--")) ? fexPreset
+                : preferences.getString(SELECTED_FEXCORE_PRESET, "Balanced"));
+
+        fexTsoEnabled = getFEXTsoEnabled(selectedFEXPreset);
+        fexMultiBlock = getFEXMultiBlock(selectedFEXPreset);
+        fexX87ReducedPrecision = getFEXX87ReducedPrecision(selectedFEXPreset);
+        fexSilentLog = getFEXSilentLog(selectedFEXPreset);
+        fexSmcChecks = getFEXSmcChecks(selectedFEXPreset);
+        fexVectorWidth = getFEXVectorWidth(selectedFEXPreset);
     }
 
     public static void copyFile(InputStream input, OutputStream out) throws IOException {

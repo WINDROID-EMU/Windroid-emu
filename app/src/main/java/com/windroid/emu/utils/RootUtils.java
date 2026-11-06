@@ -159,6 +159,7 @@ public class RootUtils {
      * Verifica se o tmpfs já está montado.
      */
     public static boolean isTmpfsMounted() {
+        if (!isRootAvailable()) return false;
         String mounts = runCommandWithOutput("su -c 'cat /proc/mounts'", false);
         return mounts != null && mounts.contains("/data/data/com.windroid.emu/files/usr/tmp");
     }
@@ -168,20 +169,39 @@ public class RootUtils {
      */
     public static void mountTmpfs() {
         if (!isRootAvailable() || isTmpfsMounted()) return;
-        
+
         Log.i(TAG, "Mounting tmpfs for esync...");
-        runCommand("su -c 'mkdir -p /data/data/com.windroid.emu/files/usr/tmp'", false);
-        
-        // Try mounting without SELinux context first (most compatible)
-        runCommand("su -c 'mount -t tmpfs -o size=256M,mode=1777 tmpfs /data/data/com.windroid.emu/files/usr/tmp'", false);
-        
-        // If that failed, try with generic SELinux context as fallback
-        if (!isTmpfsMounted()) {
-            runCommand("su -c 'mount -t tmpfs -o size=256M,mode=1777,context=u:object_r:app_data_file:s0 tmpfs /data/data/com.windroid.emu/files/usr/tmp'", false);
-        }
+        String tmpPath = "/data/data/com.windroid.emu/files/usr/tmp";
+        int myUid = android.os.Process.myUid();
+
+        runCommand("su -c 'mkdir -p " + tmpPath + "'", false);
+
+        // Mount tmpfs with app UID, GID and mode
+        runCommand("su -c 'mount -t tmpfs -o size=256M,mode=0771,uid=" + myUid + ",gid=" + myUid + " tmpfs " + tmpPath + "'", false);
 
         if (isTmpfsMounted()) {
-            Log.i(TAG, "tmpfs successfully mounted in RAM.");
+            // Apply app SELinux context so untrusted_app can access without AVC denial
+            runCommand("su -c 'chcon u:object_r:app_data_file:s0 " + tmpPath + " 2>/dev/null || restorecon -R " + tmpPath + "'", false);
+            runCommand("su -c 'chown " + myUid + ":" + myUid + " " + tmpPath + " && chmod 0771 " + tmpPath + "'", false);
+
+            // Verify if app actually has write access
+            java.io.File testFile = new java.io.File(tmpPath, ".tmpfs_test");
+            boolean writeOk = false;
+            try {
+                if (testFile.createNewFile()) {
+                    testFile.delete();
+                    writeOk = true;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "tmpfs write test failed: " + e.getMessage());
+            }
+
+            if (writeOk) {
+                Log.i(TAG, "tmpfs successfully mounted and verified in RAM.");
+            } else {
+                Log.w(TAG, "tmpfs mounted but not writable by app due to SELinux. Unmounting to fallback to physical storage...");
+                umountTmpfs();
+            }
         } else {
             Log.e(TAG, "Failed to mount tmpfs. Esync will use physical storage.");
         }
@@ -192,9 +212,9 @@ public class RootUtils {
      */
     public static void umountTmpfs() {
         if (!isRootAvailable()) return;
-        
+
         Log.i(TAG, "Unmounting tmpfs...");
-        runCommand("su -c 'umount /data/data/com.windroid.emu/files/usr/tmp'", false);
+        runCommand("su -c 'umount -f /data/data/com.windroid.emu/files/usr/tmp' 2>/dev/null", false);
     }
 
     /**

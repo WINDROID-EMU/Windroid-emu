@@ -10,9 +10,12 @@ import static com.windroid.emu.adapters.AdapterPreset.clickedPresetName;
 import static com.windroid.emu.adapters.AdapterPreset.clickedPresetType;
 import static com.windroid.emu.fragments.Box64PresetManagerFragment.exportBox64Preset;
 import static com.windroid.emu.fragments.Box64PresetManagerFragment.importBox64Preset;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.exportFEXCorePreset;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.importFEXCorePreset;
 import static com.windroid.emu.fragments.ControllerPresetManagerFragment.exportControllerPreset;
 import static com.windroid.emu.fragments.ControllerPresetManagerFragment.importControllerPreset;
 import static com.windroid.emu.fragments.CreatePresetFragment.BOX64_PRESET;
+import static com.windroid.emu.fragments.CreatePresetFragment.FEXCORE_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.VIRTUAL_CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.ShortcutsFragment.putExePath;
@@ -134,6 +137,7 @@ public class FloatingFileManagerFragment extends DialogFragment {
                         case VIRTUAL_CONTROLLER_PRESET -> exportVirtualControllerPreset(clickedPresetName, outputFile);
                         case CONTROLLER_PRESET -> exportControllerPreset(clickedPresetName, outputFile);
                         case BOX64_PRESET -> exportBox64Preset(clickedPresetName, outputFile);
+                        case FEXCORE_PRESET -> exportFEXCorePreset(clickedPresetName, outputFile);
                     }
 
                     outputFile = null;
@@ -174,6 +178,12 @@ public class FloatingFileManagerFragment extends DialogFragment {
                             boolean ret = importBox64Preset(outputFile);
                             if (!ret)
                                 Toast.makeText(requireContext(), R.string.invalid_box64_preset_file, Toast.LENGTH_SHORT)
+                                        .show();
+                        }
+                        case FEXCORE_PRESET -> {
+                            boolean ret = importFEXCorePreset(outputFile);
+                            if (!ret)
+                                Toast.makeText(requireContext(), R.string.invalid_fexcore_preset_file, Toast.LENGTH_SHORT)
                                         .show();
                         }
                     }
@@ -389,6 +399,12 @@ public class FloatingFileManagerFragment extends DialogFragment {
                                         }
                                         case BOX64_PRESET -> {
                                             if (mwpType.equals("box64Preset") || mwpType.equals("box64PresetV2")) {
+                                                fileList.add(
+                                                        new AdapterFiles.FileList(file));
+                                            }
+                                        }
+                                        case FEXCORE_PRESET -> {
+                                            if (mwpType.equals("fexcorePreset")) {
                                                 fileList.add(
                                                         new AdapterFiles.FileList(file));
                                             }

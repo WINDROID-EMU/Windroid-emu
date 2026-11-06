@@ -1,13 +1,15 @@
 package com.windroid.emu.core;
 
+import java.io.File;
+
 public class FEXCoreWrapper {
     static {
         System.loadLibrary("windroid");
     }
 
     /**
-     * Set the path to FEXInterpreter executable
-     * @param path Path to FEXInterpreter
+     * Set the path to FEXLoader or FEXInterpreter executable
+     * @param path Path to FEX executable
      * @return true if path set successfully, false otherwise
      */
     public native boolean setFEXInterpreterPath(String path);
@@ -18,6 +20,12 @@ public class FEXCoreWrapper {
      * @return true if path set successfully, false otherwise
      */
     public native boolean setRootFSPath(String path);
+
+    /**
+     * Check if the configured FEX binary exists and is executable
+     * @return true if available, false otherwise
+     */
+    public native boolean isAvailable();
 
     /**
      * Initialize FEXCore for x86_64 emulation on ARM64 Android
@@ -31,7 +39,7 @@ public class FEXCoreWrapper {
     public native void shutdown();
 
     /**
-     * Load an ELF executable for emulation
+     * Load/check an ELF executable for emulation
      * @param elfPath Path to the ELF executable
      * @return true if loading successful, false otherwise
      */
@@ -58,5 +66,19 @@ public class FEXCoreWrapper {
             instance = new FEXCoreWrapper();
         }
         return instance;
+    }
+
+    /**
+     * Helper to configure and initialize FEXCore with paths
+     */
+    public boolean configure(String fexBinaryPath, String rootfsPath) {
+        if (fexBinaryPath == null || !new File(fexBinaryPath).exists()) {
+            return false;
+        }
+        setFEXInterpreterPath(fexBinaryPath);
+        if (rootfsPath != null) {
+            setRootFSPath(rootfsPath);
+        }
+        return initialize();
     }
 }

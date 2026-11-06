@@ -24,6 +24,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.windroid.emu.R;
 import com.windroid.emu.databinding.ActivityGeneralSettingsBinding;
 import com.windroid.emu.fragments.Box64SettingsFragment;
+import com.windroid.emu.fragments.FEXCoreSettingsFragment;
 import com.windroid.emu.fragments.DebugSettingsFragment;
 import com.windroid.emu.fragments.DriverInfoFragment;
 import com.windroid.emu.fragments.DriversSettingsFragment;
@@ -42,6 +43,7 @@ public class GeneralSettingsActivity extends AppCompatActivity {
     private String initialPreference = null;
     private boolean isAtContainerLevel = false;
     private final Box64SettingsFragment box64SettingsFragment = new Box64SettingsFragment();
+    private final FEXCoreSettingsFragment fexcoreSettingsFragment = new FEXCoreSettingsFragment();
     private final DebugSettingsFragment debugSettingsFragment = new DebugSettingsFragment();
     private final DriverInfoFragment driverInfoFragment = new DriverInfoFragment();
     private final DriversSettingsFragment driversSettingsFragment = new DriversSettingsFragment();
@@ -64,6 +66,8 @@ public class GeneralSettingsActivity extends AppCompatActivity {
             if (ACTION_PREFERENCE_SELECT.equals(intent.getAction())) {
                 if (preference.equals(getString(R.string.box64_settings_title))) {
                     fragmentLoader(box64SettingsFragment, false);
+                } else if (preference.equals(getString(R.string.fexcore_settings_title))) {
+                    fragmentLoader(fexcoreSettingsFragment, false);
                 } else if (preference.equals(getString(R.string.debug_settings_title))) {
                     fragmentLoader(debugSettingsFragment, false);
                 } else if (preference.equals(getString(R.string.driver_settings_container_title))) {
@@ -373,6 +377,24 @@ public class GeneralSettingsActivity extends AppCompatActivity {
     public final static boolean BOX64_NOSIGILL_DEFAULT_VALUE = false;
 
     public final static String SELECTED_BOX64 = "selectedBox64";
+    public final static String SELECTED_EMULATOR = "selectedEmulator";
+    public final static String EMULATOR_BOX64 = "Box64";
+    public final static String EMULATOR_FEXCORE = "FEXCore";
+    public final static String SELECTED_FEXCORE = "selectedFEXCore";
+    public final static String SELECTED_FEXCORE_PRESET = "selectedFEXCorePreset";
+    public final static String FEXCORE_PRESET_DEFAULT = "Balanced";
+    public final static String FEX_TSO_ENABLED = "FEX_TSOENABLED";
+    public final static boolean FEX_TSO_ENABLED_DEFAULT_VALUE = true;
+    public final static String FEX_MULTI_BLOCK = "FEX_MULTIBLOCK";
+    public final static boolean FEX_MULTI_BLOCK_DEFAULT_VALUE = true;
+    public final static String FEX_X87_REDUCED_PRECISION = "FEX_X87REDUCEDPRECISION";
+    public final static boolean FEX_X87_REDUCED_PRECISION_DEFAULT_VALUE = false;
+    public final static String FEX_SILENT_LOG = "FEX_SILENTLOG";
+    public final static boolean FEX_SILENT_LOG_DEFAULT_VALUE = true;
+    public final static String FEX_SMC_CHECKS = "FEX_SMCCHECKS";
+    public final static String FEX_SMC_CHECKS_DEFAULT_VALUE = "app";
+    public final static String FEX_VECTOR_WIDTH = "FEX_VECTOR_WIDTH";
+    public final static String FEX_VECTOR_WIDTH_DEFAULT_VALUE = "128";
     public final static String SELECTED_VULKAN_DRIVER = "selectedVulkanDriver";
     public final static String SELECTED_WINE_PREFIX = "selectedWinePrefix";
     public final static String SELECTED_TU_DEBUG_PRESET = "selectedTuDebugPreset";

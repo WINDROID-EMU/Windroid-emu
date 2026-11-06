@@ -4,6 +4,7 @@ import static com.windroid.emu.activities.MainActivity.setSharedVars;
 import static com.windroid.emu.activities.MainActivity.setupDone;
 import static com.windroid.emu.core.RatPackageManager.listRatPackages;
 import static com.windroid.emu.fragments.Box64PresetManagerFragment.addBox64Preset;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.addFEXCorePreset;
 import static com.windroid.emu.fragments.ControllerPresetManagerFragment.addControllerPreset;
 import static com.windroid.emu.fragments.VirtualControllerPresetManagerFragment.addVirtualControllerPreset;
 import static com.windroid.emu.fragments.WinePrefixManagerFragment.createWinePrefix;
@@ -66,7 +67,7 @@ public class CreatePresetFragment extends DialogFragment {
 
                 wineVersionSpinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, winePackagesNames));
             }
-            case CONTROLLER_PRESET, VIRTUAL_CONTROLLER_PRESET, BOX64_PRESET -> {
+            case CONTROLLER_PRESET, VIRTUAL_CONTROLLER_PRESET, BOX64_PRESET, FEXCORE_PRESET -> {
                 wineVersionText.setVisibility(View.GONE);
                 wineVersionSpinner.setVisibility(View.GONE);
             }
@@ -99,6 +100,7 @@ public class CreatePresetFragment extends DialogFragment {
                 case CONTROLLER_PRESET -> addControllerPreset(requireContext(), newName);
                 case VIRTUAL_CONTROLLER_PRESET -> addVirtualControllerPreset(requireContext(), newName);
                 case BOX64_PRESET -> addBox64Preset(requireContext(), newName);
+                case FEXCORE_PRESET -> addFEXCorePreset(requireContext(), newName);
             }
             dismiss();
         });
@@ -112,4 +114,5 @@ public class CreatePresetFragment extends DialogFragment {
     public final static int CONTROLLER_PRESET = 2;
     public final static int VIRTUAL_CONTROLLER_PRESET = 3;
     public final static int BOX64_PRESET = 4;
+    public final static int FEXCORE_PRESET = 5;
 }

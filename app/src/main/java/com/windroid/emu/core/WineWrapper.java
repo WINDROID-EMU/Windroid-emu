@@ -1,6 +1,7 @@
 package com.windroid.emu.core;
 
 import static com.windroid.emu.activities.MainActivity.deviceArch;
+import static com.windroid.emu.activities.MainActivity.selectedEmulator;
 import static com.windroid.emu.activities.MainActivity.usrDir;
 import static com.windroid.emu.activities.MainActivity.wineDisksFolder;
 import static com.windroid.emu.activities.MainActivity.winePrefix;
@@ -22,7 +23,17 @@ import java.util.List;
 
 public class WineWrapper {
     private static final String TAG = "WineWrapper";
-    private static final String IS_BOX64 = deviceArch.equals("x86_64") ? "" : "box64";
+    public static final String IS_BOX64 = deviceArch.equals("x86_64") ? "" : "box64";
+
+    public static String getEmulatorRunner() {
+        if (deviceArch.equals("x86_64")) {
+            return "";
+        }
+        if ("FEXCore".equals(selectedEmulator)) {
+            return "FEXLoader --";
+        }
+        return "box64";
+    }
 
     /**
      * Verifica se o comando é uma solicitação para abrir o WinetricksFragment.
@@ -132,7 +143,7 @@ public class WineWrapper {
 
         runCommand(
                 ((cwd != null) ? "cd " + cwd + ";" : "") + getEnv() + "WINEPREFIX='" + winePrefixesDir + "/"
-                        + winePrefix + "' " + IS_BOX64 + " " + wineBin + " " + args,
+                        + winePrefix + "' " + getEmulatorRunner() + " " + wineBin + " " + args,
                 true);
     }
 
@@ -144,12 +155,16 @@ public class WineWrapper {
     public static void killAll() {
         String wineserverBin = ratPackagesDir + "/" + selectedWine + "/files/wine/bin/wineserver";
 
-        runCommand(getEnv() + "WINEPREFIX='" + winePrefixesDir + "/" + winePrefix + "' " + IS_BOX64 + " " + wineserverBin + " -k",
+        runCommand(getEnv() + "WINEPREFIX='" + winePrefixesDir + "/" + winePrefix + "' " + getEmulatorRunner() + " " + wineserverBin + " -k",
                 false);
         runCommand("pkill -9 -f .exe", false);
         runCommand("pkill -9 -f wineserver", false);
         runCommand("pkill -9 -f wineboot", false);
         runCommand("pkill -9 -f wine", false);
+        runCommand("pkill -9 -f FEXLoader", false);
+        runCommand("pkill -9 -f FEXInterpreter", false);
+        runCommand("pkill -9 -f FEXServer", false);
+        runCommand("pkill -9 -f box64", false);
     }
 
     public static void clearDrives() {
@@ -259,8 +274,9 @@ public class WineWrapper {
     }
 
     public static int getWinPidByName(String processName) {
+        String extra = "FEXCore".equals(selectedEmulator) ? "FEX_SILENTLOG=1 " : "BOX64_LOG=0 ";
         String[] taskList = runCommandWithOutput(
-                getEnv() + "BOX64_LOG=0 WINEPREFIX='" + winePrefixesDir + "/" + winePrefix + "' " + IS_BOX64
+                getEnv() + extra + "WINEPREFIX='" + winePrefixesDir + "/" + winePrefix + "' " + getEmulatorRunner()
                         + " wine tasklist",
                 false).split("\n");
 

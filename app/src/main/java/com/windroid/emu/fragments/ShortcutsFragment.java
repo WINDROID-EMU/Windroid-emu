@@ -535,6 +535,70 @@ public class ShortcutsFragment extends Fragment {
         return List.of(gameList.get(index).displayMode, gameList.get(index).displayResolution);
     }
 
+    public static void putEmulator(String name, String emulator) {
+        int index = IntStream.range(0, gameList.size()).filter(i -> gameList.get(i).name.equals(name)).findFirst()
+                .orElse(-1);
+        if (index == -1)
+            return;
+
+        gameList.get(index).emulator = emulator;
+
+        saveShortcuts();
+    }
+
+    public static String getEmulator(String name) {
+        int index = IntStream.range(0, gameList.size()).filter(i -> gameList.get(i).name.equals(name)).findFirst()
+                .orElse(-1);
+        if (index == -1 || gameList.get(index).emulator == null)
+            return "Global";
+
+        return gameList.get(index).emulator;
+    }
+
+    public static void putFEXCoreVersion(String name, String fexVersionId) {
+        int index = IntStream.range(0, gameList.size()).filter(i -> gameList.get(i).name.equals(name)).findFirst()
+                .orElse(-1);
+        if (index == -1)
+            return;
+
+        gameList.get(index).fexCoreVersion = fexVersionId;
+
+        saveShortcuts();
+    }
+
+    public static String getFEXCoreVersion(String name) {
+        int index = IntStream.range(0, gameList.size()).filter(i -> gameList.get(i).name.equals(name)).findFirst()
+                .orElse(-1);
+        if (index == -1 || gameList.get(index).fexCoreVersion == null) {
+            List<String> fexPackages = listRatPackagesId("FEXCore");
+            if (fexPackages.isEmpty())
+                return "Global";
+            return fexPackages.get(0);
+        }
+
+        return gameList.get(index).fexCoreVersion;
+    }
+
+    public static void putFEXCorePreset(String name, String presetName) {
+        int index = IntStream.range(0, gameList.size()).filter(i -> gameList.get(i).name.equals(name)).findFirst()
+                .orElse(-1);
+        if (index == -1)
+            return;
+
+        gameList.get(index).fexCorePreset = presetName;
+
+        saveShortcuts();
+    }
+
+    public static String getFEXCorePreset(String name) {
+        int index = IntStream.range(0, gameList.size()).filter(i -> gameList.get(i).name.equals(name)).findFirst()
+                .orElse(-1);
+        if (index == -1 || gameList.get(index).fexCorePreset == null)
+            return "Balanced";
+
+        return gameList.get(index).fexCorePreset;
+    }
+
     public static void putBox64Version(String name, String box64VersionId) {
         int index = IntStream.range(0, gameList.size()).filter(i -> gameList.get(i).name.equals(name)).findFirst()
                 .orElse(-1);

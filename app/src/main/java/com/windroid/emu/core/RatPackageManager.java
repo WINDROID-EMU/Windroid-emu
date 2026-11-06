@@ -1,6 +1,7 @@
 package com.windroid.emu.core;
 
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_BOX64;
+import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_FEXCORE;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_VULKAN_DRIVER;
 import static com.windroid.emu.activities.MainActivity.appRootDir;
 import static com.windroid.emu.activities.MainActivity.gson;
@@ -92,6 +93,7 @@ public class RatPackageManager {
                 File adrenoToolsFolder = new File(extractDir, "adrenoTools");
                 File vulkanDriversFolder = new File(extractDir, "vulkanDrivers");
                 File box64Folder = new File(extractDir, "box64");
+                File fexcoreFolder = new File(extractDir, "fexcore");
                 File wineFolder = new File(extractDir, "wine");
 
                 File wineUtilsDir = new File(appRootDir, "wine-utils");
@@ -215,6 +217,18 @@ public class RatPackageManager {
                     deleteDirectoryRecursively(box64Folder.toPath());
                 }
 
+                dialogTitleText = context.getString(R.string.installing_fexcore);
+
+                if (fexcoreFolder.exists()) {
+                    File[] installedFEXCores = fexcoreFolder.listFiles();
+                    if (installedFEXCores != null) {
+                        for (File fexcoreFile : installedFEXCores) {
+                            installRat(new RatPackage(fexcoreFile.getPath()), context);
+                        }
+                    }
+                    deleteDirectoryRecursively(fexcoreFolder.toPath());
+                }
+
                 dialogTitleText = context.getString(R.string.installing_wine);
 
                 if (wineFolder.exists()) {
@@ -252,6 +266,39 @@ public class RatPackageManager {
                     );
                 } catch (IOException e) {
                     Log.e(TAG, "Failed to write Box64 pkg-header", e);
+                }
+
+                if (!installingRootFS) {
+                    try (FileWriter writer = new FileWriter(new File(extractDir, "pkg-external"))) {
+                        writer.write("");
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to write pkg-external", e);
+                    }
+                }
+            }
+            case "FEXCore" -> {
+                if (preferences != null) {
+                    if (preferences.getString(SELECTED_FEXCORE, "").isEmpty()) {
+                        if (extractDir != null) {
+                            SharedPreferences.Editor editor = preferences.edit();
+                            editor.putString(SELECTED_FEXCORE, new File(extractDir).getName());
+                            editor.apply();
+                        }
+                    }
+                }
+
+                File pkgHeader = new File(extractDir, "pkg-header");
+
+                try (FileWriter writer = new FileWriter(pkgHeader)) {
+                    writer.write(
+                            "name=" + ratPackage.name + "\n" +
+                            "category=" + ratPackage.category + "\n" +
+                            "version=" + ratPackage.version + "\n" +
+                            "architecture=" + ratPackage.architecture + "\n" +
+                            "vkDriverLib=\n"
+                    );
+                } catch (IOException e) {
+                    Log.e(TAG, "Failed to write FEXCore pkg-header", e);
                 }
 
                 if (!installingRootFS) {
@@ -644,5 +691,5 @@ public class RatPackageManager {
 
     private static boolean installingRootFS = false;
 
-    public static Set<String> installablePackagesCategories = Set.of("VulkanDriver", "Box64", "Wine", "DXVK", "WineD3D", "VKD3D");
+    public static Set<String> installablePackagesCategories = Set.of("VulkanDriver", "Box64", "FEXCore", "Wine", "DXVK", "WineD3D", "VKD3D");
 }

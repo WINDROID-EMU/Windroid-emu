@@ -212,8 +212,11 @@ public class AdapterGame extends RecyclerView.Adapter<AdapterGame.ViewHolder> {
         public String exePath;
         public String exeArguments;
         public String iconPath;
+        public String emulator;
         public String box64Version;
         public String box64Preset;
+        public String fexCoreVersion;
+        public String fexCorePreset;
         public ArrayList<String> controllersPreset;
         public ArrayList<Boolean> controllersEnableXInput;
         public ArrayList<Boolean> controllersXInputSwapAnalogs;
@@ -242,8 +245,11 @@ public class AdapterGame extends RecyclerView.Adapter<AdapterGame.ViewHolder> {
             this.exePath = exePath;
             this.exeArguments = exeArguments;
             this.iconPath = iconPath;
+            this.emulator = "Global";
             this.box64Version = "Global";
             this.box64Preset = "default";
+            this.fexCoreVersion = "Global";
+            this.fexCorePreset = "Balanced";
             this.controllersPreset = new ArrayList<>(Arrays.asList("default", "default", "default", "default"));
             this.controllersEnableXInput = new ArrayList<>(Arrays.asList(true, true, true, true));
             this.controllersXInputSwapAnalogs = new ArrayList<>(Arrays.asList(false, false, false, false));

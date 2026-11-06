@@ -281,4 +281,27 @@
     <string name="enable_vibration_desc">Permite o celular vibrar de acordo com ações no jogo</string>
     <string name="clear_all_shortcuts">Limpar Todos os Atalhos</string>
     <string name="clear_all_shortcuts_desc">Apagar todos atalhos</string>
+
+    <!-- FEXCore Strings -->
+    <string name="fex_tso_enabled_desc">Ativar/Desativar emulação do modelo de memória Total Store Order (TSO)</string>
+    <string name="fex_multi_block_desc">Ativar/Desativar tradução JIT multi-bloco para maior desempenho</string>
+    <string name="fex_x87_reduced_precision_desc">Usar precisão reduzida de 64 bits para operações de ponto flutuante x87</string>
+    <string name="fex_silent_log_desc">Desativar registros detalhados do FEX para logs mais limpos e leve ganho de desempenho</string>
+    <string name="fex_smc_checks_desc">Estratégia de detecção de código auto-modificável (none, app, mtrack)</string>
+    <string name="fex_vector_width_desc">Largura do vetor do host em bits (128 ou 256)</string>
+
+    <string name="fexcore_settings_title">Configurações do FEXCore</string>
+    <string name="fexcore_settings_desc">Configurar emulador FEXCore</string>
+    <string name="fexcore_manager_title">Gerenciador FEXCore</string>
+    <string name="fexcore_manager_desc">Gerenciar versões do FEXCore</string>
+    <string name="fexcore_preset_manager_title">Gerenciador de Presets FEXCore</string>
+    <string name="fexcore_preset_manager_desc">Gerenciar Presets do FEXCore</string>
+    <string name="selected_fexcore_profile">Perfil FEXCore Selecionado</string>
+    <string name="selected_fexcore">FEXCore Selecionado</string>
+    <string name="fexcore_version">Versão do FEXCore</string>
+    <string name="installing_fexcore">Instalando FEXCore…</string>
+    <string name="invalid_fexcore_preset_file">Arquivo de Preset FEXCore Inválido</string>
+    <string name="translation_layer_title">Camada de Tradução</string>
+    <string name="translation_layer_desc">Selecionar emulador de CPU (Box64 ou FEXCore)</string>
+    <string name="emulator_title">Emulador de CPU</string>
 </resources>

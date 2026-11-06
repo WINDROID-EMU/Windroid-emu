@@ -2,9 +2,11 @@ package com.windroid.emu.adapters;
 
 import static com.windroid.emu.activities.PresetManagerActivity.ACTION_EDIT_BOX64_PRESET;
 import static com.windroid.emu.activities.PresetManagerActivity.ACTION_EDIT_CONTROLLER_MAPPING;
+import static com.windroid.emu.activities.PresetManagerActivity.ACTION_EDIT_FEXCORE_PRESET;
 import static com.windroid.emu.adapters.AdapterGame.selectedGameName;
 import static com.windroid.emu.fragments.CreatePresetFragment.BOX64_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.CONTROLLER_PRESET;
+import static com.windroid.emu.fragments.CreatePresetFragment.FEXCORE_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.VIRTUAL_CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.WINE_PREFIX_PRESET;
 import static com.windroid.emu.fragments.DeleteItemFragment.DELETE_PRESET;
@@ -12,9 +14,11 @@ import static com.windroid.emu.fragments.FloatingFileManagerFragment.OPERATION_E
 import static com.windroid.emu.fragments.RenameFragment.RENAME_PRESET;
 import static com.windroid.emu.fragments.ShortcutsFragment.getBox64Preset;
 import static com.windroid.emu.fragments.ShortcutsFragment.getControllerPreset;
+import static com.windroid.emu.fragments.ShortcutsFragment.getFEXCorePreset;
 import static com.windroid.emu.fragments.ShortcutsFragment.getSelectedVirtualControllerPreset;
 import static com.windroid.emu.fragments.ShortcutsFragment.putBox64Preset;
 import static com.windroid.emu.fragments.ShortcutsFragment.putControllerPreset;
+import static com.windroid.emu.fragments.ShortcutsFragment.putFEXCorePreset;
 import static com.windroid.emu.fragments.ShortcutsFragment.putSelectedVirtualControllerPreset;
 import static com.windroid.emu.fragments.WinePrefixManagerFragment.getSelectedWinePrefix;
 import static com.windroid.emu.fragments.WinePrefixManagerFragment.putSelectedWinePrefix;
@@ -100,6 +104,16 @@ public class AdapterPreset extends RecyclerView.Adapter<AdapterPreset.ViewHolder
                         notifyItemRangeChanged(0, presetList.size());
                     });
                 }
+                case FEXCORE_PRESET -> {
+                    if (item.titleSettings.equals(getFEXCorePreset(selectedGameName))) {
+                        selectedPresetId = holder.getAdapterPosition();
+                    }
+                    holder.radioButton.setOnClickListener((v) -> {
+                        putFEXCorePreset(selectedGameName, holder.settingsName.getText().toString());
+                        selectedPresetId = holder.getAdapterPosition();
+                        notifyItemRangeChanged(0, presetList.size());
+                    });
+                }
                 case WINE_PREFIX_PRESET -> {
                     if (item.titleSettings.equals(getSelectedWinePrefix())) {
                         selectedPresetId = holder.getAdapterPosition();
@@ -131,6 +145,7 @@ public class AdapterPreset extends RecyclerView.Adapter<AdapterPreset.ViewHolder
                         case CONTROLLER_PRESET -> context.sendBroadcast(new Intent(ACTION_EDIT_CONTROLLER_MAPPING).setPackage("com.windroid.emu"));
                         case VIRTUAL_CONTROLLER_PRESET -> context.startActivity(new Intent(context, VirtualControllerOverlayMapper.class));
                         case BOX64_PRESET -> context.sendBroadcast(new Intent(ACTION_EDIT_BOX64_PRESET).setPackage("com.windroid.emu"));
+                        case FEXCORE_PRESET -> context.sendBroadcast(new Intent(ACTION_EDIT_FEXCORE_PRESET).setPackage("com.windroid.emu"));
                     }
                 } else if (menuItem.getItemId() == R.id.deletePreset) {
                     clickedPresetName = item.titleSettings;

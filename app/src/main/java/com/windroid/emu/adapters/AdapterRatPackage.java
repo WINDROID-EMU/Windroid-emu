@@ -1,6 +1,7 @@
 package com.windroid.emu.adapters;
 
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_BOX64;
+import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_FEXCORE;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_VULKAN_DRIVER;
 import static com.windroid.emu.activities.MainActivity.preferences;
 import static com.windroid.emu.activities.MainActivity.tmpDir;
@@ -8,6 +9,7 @@ import static com.windroid.emu.core.RatPackageManager.deleteRatPackageById;
 import static com.windroid.emu.core.RatPackageManager.installRat;
 import static com.windroid.emu.core.RatPackageManager.listRatPackages;
 import static com.windroid.emu.fragments.RatDownloaderFragment.downloadPackage;
+import static com.windroid.emu.utils.FileUtils.deleteDirectoryContents;
 import static com.windroid.emu.utils.FileUtils.deleteDirectoryRecursively;
 
 import android.content.Context;
@@ -27,6 +29,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.windroid.emu.core.RatPackageManager;
+import java.util.List;
 
 import com.windroid.emu.R;
 import com.windroid.emu.core.RatPackageManager;
@@ -91,6 +96,14 @@ public class AdapterRatPackage extends RecyclerView.Adapter<AdapterRatPackage.Vi
                 }
                 holder.imageView.setImageResource(R.drawable.ic_box64);
             }
+            case FEXCORE -> {
+                selectedItem = preferences.getString(SELECTED_FEXCORE, "");
+
+                if (isRepositoryPackage) {
+                    holder.radioButton.setVisibility(View.GONE);
+                }
+                holder.imageView.setImageResource(R.drawable.ic_fexcore);
+            }
             case WINE -> {
                 holder.radioButton.setVisibility(View.GONE);
                 holder.imageView.setImageResource(R.drawable.ic_wine);
@@ -136,6 +149,7 @@ public class AdapterRatPackage extends RecyclerView.Adapter<AdapterRatPackage.Vi
 
             switch (item.type) {
                 case BOX64 -> editor.putString(SELECTED_BOX64, item.itemFolderId);
+                case FEXCORE -> editor.putString(SELECTED_FEXCORE, item.itemFolderId);
                 case VK_DRIVER -> editor.putString(SELECTED_VULKAN_DRIVER, item.itemFolderId);
             }
 
@@ -156,6 +170,10 @@ public class AdapterRatPackage extends RecyclerView.Adapter<AdapterRatPackage.Vi
 
                 switch (item.type) {
                     case BOX64 -> editor.putString(SELECTED_BOX64, listRatPackages("Box64").get(0).getFolderName());
+                    case FEXCORE -> {
+                        List<RatPackageManager.RatPackage> fexList = listRatPackages("FEXCore");
+                        editor.putString(SELECTED_FEXCORE, fexList.isEmpty() ? "" : fexList.get(0).getFolderName());
+                    }
                     case VK_DRIVER -> editor.putString(SELECTED_VULKAN_DRIVER,
                             listRatPackages("VulkanDriver").get(0).getFolderName());
                 }
@@ -172,7 +190,7 @@ public class AdapterRatPackage extends RecyclerView.Adapter<AdapterRatPackage.Vi
         });
 
         holder.downloadRatPackageButton.setOnClickListener((v) -> {
-            deleteDirectoryRecursively(tmpDir.toPath());
+            deleteDirectoryContents(tmpDir);
             tmpDir.mkdirs();
 
             new Thread(() -> {
@@ -196,7 +214,7 @@ public class AdapterRatPackage extends RecyclerView.Adapter<AdapterRatPackage.Vi
                     });
                 }
 
-                deleteDirectoryRecursively(tmpDir.toPath());
+                deleteDirectoryContents(tmpDir);
                 tmpDir.mkdirs();
             }).start();
         });
@@ -278,4 +296,5 @@ public class AdapterRatPackage extends RecyclerView.Adapter<AdapterRatPackage.Vi
     public static final int WINED3D = 5;
     public static final int VKD3D = 6;
     public static final int ROOTFS = 7;
+    public static final int FEXCORE = 8;
 }

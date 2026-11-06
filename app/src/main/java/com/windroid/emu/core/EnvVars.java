@@ -35,6 +35,14 @@ import static com.windroid.emu.activities.MainActivity.homeDir;
 import static com.windroid.emu.activities.MainActivity.preferences;
 import static com.windroid.emu.activities.MainActivity.ratPackagesDir;
 import static com.windroid.emu.activities.MainActivity.selectedBox64;
+import static com.windroid.emu.activities.MainActivity.selectedEmulator;
+import static com.windroid.emu.activities.MainActivity.selectedFEXCore;
+import static com.windroid.emu.activities.MainActivity.fexTsoEnabled;
+import static com.windroid.emu.activities.MainActivity.fexMultiBlock;
+import static com.windroid.emu.activities.MainActivity.fexX87ReducedPrecision;
+import static com.windroid.emu.activities.MainActivity.fexSilentLog;
+import static com.windroid.emu.activities.MainActivity.fexSmcChecks;
+import static com.windroid.emu.activities.MainActivity.fexVectorWidth;
 import static com.windroid.emu.activities.MainActivity.selectedDXVKHud;
 import static com.windroid.emu.activities.MainActivity.selectedGLProfile;
 import static com.windroid.emu.activities.MainActivity.selectedMesaVkWsiPresentMode;
@@ -96,9 +104,13 @@ public class EnvVars {
         vars.add("DISPLAY=:0");
         vars.add("PULSE_LATENCY_MSEC=60");
         vars.add("LD_LIBRARY_PATH=/system/lib64:" + usrDir + "/lib");
+        String fexBinPath = (selectedFEXCore != null && !selectedFEXCore.isEmpty()) ? (ratPackagesDir + "/" + selectedFEXCore + "/files/usr/bin") : "";
+        String box64BinPath = (selectedBox64 != null && !selectedBox64.isEmpty()) ? (ratPackagesDir + "/" + selectedBox64 + "/files/usr/bin") : "";
+        String emulatorBinPath = "FEXCore".equals(selectedEmulator)
+                ? (fexBinPath + (!box64BinPath.isEmpty() ? ":" + box64BinPath : ""))
+                : box64BinPath;
         vars.add("PATH=$PATH:" + usrDir + "/bin:" + ratPackagesDir + "/" + selectedWine + "/files/wine/bin:"
-                + ratPackagesDir + "/" + selectedWine + "/files/wine/lib/wine/x86_64-unix:" + ratPackagesDir + "/"
-                + selectedBox64 + "/files/usr/bin");
+                + ratPackagesDir + "/" + selectedWine + "/files/wine/lib/wine/x86_64-unix:" + emulatorBinPath);
         vars.add("PREFIX=" + usrDir);
         vars.add("MESA_SHADER_CACHE_DIR=" + homeDir + "/.cache");
         vars.add("MESA_VK_WSI_PRESENT_MODE=" + selectedMesaVkWsiPresentMode);
@@ -202,42 +214,52 @@ public class EnvVars {
         vars.add("MANGOHUD_CONFIGFILE=" + usrDir + "/etc/MangoHud.conf");
 
         if (!deviceArch.equals("x86_64")) {
-            vars.add("BOX64_LOG=" + box64LogLevel);
-
-            if (com.windroid.emu.activities.MainActivity.wineHide) {
-                vars.add("BOX64_CPUNAME=\"Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\"");
-                vars.add("BOX64_SSE42=1");
-                vars.add("BOX64_AVX=2");
-                vars.add("BOX64_DYNAREC_STRONGMEM=1");
-                vars.add("BOX64_DYNAREC_WAIT=1");
+            if ("FEXCore".equals(selectedEmulator)) {
+                vars.add("FEX_ROOTFS=" + usrDir);
+                vars.add("FEX_TSOENABLED=" + (fexTsoEnabled ? "1" : "0"));
+                vars.add("FEX_MULTIBLOCK=" + (fexMultiBlock ? "1" : "0"));
+                vars.add("FEX_X87REDUCEDPRECISION=" + (fexX87ReducedPrecision ? "1" : "0"));
+                vars.add("FEX_SILENTLOG=" + (fexSilentLog ? "1" : "0"));
+                vars.add("FEX_SMCCHECKS=" + (fexSmcChecks != null ? fexSmcChecks : "app"));
+                vars.add("FEX_VECTOR_WIDTH=" + (fexVectorWidth != null ? fexVectorWidth : "128"));
             } else {
-                vars.add("BOX64_CPUNAME=\"ARM64 CPU\"");
-                vars.add("BOX64_AVX=" + box64Avx);
-                vars.add("BOX64_SSE42=" + box64Sse42);
-                vars.add("BOX64_DYNAREC_STRONGMEM=" + box64DynarecStrongMem);
-                vars.add("BOX64_DYNAREC_WAIT=" + box64DynarecWait);
-            }
+                vars.add("BOX64_LOG=" + box64LogLevel);
 
-            vars.add("BOX64_MMAP32=" + box64MMap32);
-            vars.add("BOX64_RCFILE=" + usrDir + "/etc/box64.box64rc");
-            vars.add("BOX64_DYNAREC_BIGBLOCK=" + box64DynarecBigBlock);
-            vars.add("BOX64_DYNAREC_WEAKBARRIER=" + box64DynarecWeakBarrier);
-            vars.add("BOX64_DYNAREC_PAUSE=" + box64DynarecPause);
-            vars.add("BOX64_DYNAREC_X87DOUBLE=" + box64DynarecX87Double);
-            vars.add("BOX64_DYNAREC_FASTNAN=" + box64DynarecFastNan);
-            vars.add("BOX64_DYNAREC_FASTROUND=" + box64DynarecFastRound);
-            vars.add("BOX64_DYNAREC_SAFEFLAGS=" + box64DynarecSafeFlags);
-            vars.add("BOX64_DYNAREC_CALLRET=" + box64DynarecCallRet);
-            vars.add("BOX64_DYNAREC_ALIGNED_ATOMICS=" + box64DynarecAlignedAtomics);
-            vars.add("BOX64_DYNAREC_NATIVEFLAGS=" + box64DynarecNativeFlags);
-            vars.add("BOX64_DYNAREC_BLEEDING_EDGE=" + box64DynarecBleedingEdge);
-            vars.add("BOX64_DYNAREC_DIRTY=" + box64DynarecDirty);
-            vars.add("BOX64_DYNAREC_FORWARD=" + box64DynarecForward);
-            vars.add("BOX64_DYNAREC_DF=" + box64DynarecDF);
-            vars.add("BOX64_SHOWSEGV=" + box64ShowSegv);
-            vars.add("BOX64_SHOWBT=" + box64ShowBt);
-            vars.add("BOX64_NOSIGSEGV=" + box64NoSigSegv);
-            vars.add("BOX64_NOSIGILL=" + box64NoSigill);
+                if (com.windroid.emu.activities.MainActivity.wineHide) {
+                    vars.add("BOX64_CPUNAME=\"Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\"");
+                    vars.add("BOX64_SSE42=1");
+                    vars.add("BOX64_AVX=2");
+                    vars.add("BOX64_DYNAREC_STRONGMEM=1");
+                    vars.add("BOX64_DYNAREC_WAIT=1");
+                } else {
+                    vars.add("BOX64_CPUNAME=\"ARM64 CPU\"");
+                    vars.add("BOX64_AVX=" + box64Avx);
+                    vars.add("BOX64_SSE42=" + box64Sse42);
+                    vars.add("BOX64_DYNAREC_STRONGMEM=" + box64DynarecStrongMem);
+                    vars.add("BOX64_DYNAREC_WAIT=" + box64DynarecWait);
+                }
+
+                vars.add("BOX64_MMAP32=" + box64MMap32);
+                vars.add("BOX64_RCFILE=" + usrDir + "/etc/box64.box64rc");
+                vars.add("BOX64_DYNAREC_BIGBLOCK=" + box64DynarecBigBlock);
+                vars.add("BOX64_DYNAREC_WEAKBARRIER=" + box64DynarecWeakBarrier);
+                vars.add("BOX64_DYNAREC_PAUSE=" + box64DynarecPause);
+                vars.add("BOX64_DYNAREC_X87DOUBLE=" + box64DynarecX87Double);
+                vars.add("BOX64_DYNAREC_FASTNAN=" + box64DynarecFastNan);
+                vars.add("BOX64_DYNAREC_FASTROUND=" + box64DynarecFastRound);
+                vars.add("BOX64_DYNAREC_SAFEFLAGS=" + box64DynarecSafeFlags);
+                vars.add("BOX64_DYNAREC_CALLRET=" + box64DynarecCallRet);
+                vars.add("BOX64_DYNAREC_ALIGNED_ATOMICS=" + box64DynarecAlignedAtomics);
+                vars.add("BOX64_DYNAREC_NATIVEFLAGS=" + box64DynarecNativeFlags);
+                vars.add("BOX64_DYNAREC_BLEEDING_EDGE=" + box64DynarecBleedingEdge);
+                vars.add("BOX64_DYNAREC_DIRTY=" + box64DynarecDirty);
+                vars.add("BOX64_DYNAREC_FORWARD=" + box64DynarecForward);
+                vars.add("BOX64_DYNAREC_DF=" + box64DynarecDF);
+                vars.add("BOX64_SHOWSEGV=" + box64ShowSegv);
+                vars.add("BOX64_SHOWBT=" + box64ShowBt);
+                vars.add("BOX64_NOSIGSEGV=" + box64NoSigSegv);
+                vars.add("BOX64_NOSIGILL=" + box64NoSigill);
+            }
         }
 
         vars.add("VKD3D_FEATURE_LEVEL=12_0");

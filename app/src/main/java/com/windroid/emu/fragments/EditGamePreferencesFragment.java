@@ -1,6 +1,8 @@
 package com.windroid.emu.fragments;
 
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_BOX64;
+import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_EMULATOR;
+import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_FEXCORE;
 import static com.windroid.emu.activities.GeneralSettingsActivity.SELECTED_VULKAN_DRIVER;
 import static com.windroid.emu.activities.MainActivity.ACTION_RUN_WINE;
 import static com.windroid.emu.activities.MainActivity.ACTION_SELECT_EXE_PATH;
@@ -19,6 +21,7 @@ import static com.windroid.emu.core.RatPackageManager.getPackageNameVersionById;
 import static com.windroid.emu.core.RatPackageManager.listRatPackages;
 import static com.windroid.emu.core.WineWrapper.extractIcon;
 import static com.windroid.emu.fragments.Box64PresetManagerFragment.getBox64Presets;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.getFEXCorePresets;
 import static com.windroid.emu.fragments.ControllerPresetManagerFragment.getControllerPresets;
 import static com.windroid.emu.fragments.ControllerSettingsFragment.ACTION_UPDATE_CONTROLLERS_STATUS;
 import static com.windroid.emu.fragments.DebugSettingsFragment.availableCPUs;
@@ -31,12 +34,15 @@ import static com.windroid.emu.fragments.ShortcutsFragment.getCpuAffinity;
 import static com.windroid.emu.fragments.ShortcutsFragment.getD3DXRenderer;
 import static com.windroid.emu.fragments.ShortcutsFragment.getDXVKVersion;
 import static com.windroid.emu.fragments.ShortcutsFragment.getDisplaySettings;
+import static com.windroid.emu.fragments.ShortcutsFragment.getEmulator;
 import static com.windroid.emu.fragments.ShortcutsFragment.getEnableAFME;
 import static com.windroid.emu.fragments.ShortcutsFragment.getEnableDInput;
 import static com.windroid.emu.fragments.ShortcutsFragment.getEnableXInput;
 import static com.windroid.emu.fragments.ShortcutsFragment.getEnvVars;
 import static com.windroid.emu.fragments.ShortcutsFragment.getExeArguments;
 import static com.windroid.emu.fragments.ShortcutsFragment.getExePath;
+import static com.windroid.emu.fragments.ShortcutsFragment.getFEXCorePreset;
+import static com.windroid.emu.fragments.ShortcutsFragment.getFEXCoreVersion;
 import static com.windroid.emu.fragments.ShortcutsFragment.getGameExeArguments;
 import static com.windroid.emu.fragments.ShortcutsFragment.getGameIcon;
 import static com.windroid.emu.fragments.ShortcutsFragment.getSelectedVirtualControllerPreset;
@@ -57,10 +63,13 @@ import static com.windroid.emu.fragments.ShortcutsFragment.putCpuAffinity;
 import static com.windroid.emu.fragments.ShortcutsFragment.putD3DXRenderer;
 import static com.windroid.emu.fragments.ShortcutsFragment.putDXVKVersion;
 import static com.windroid.emu.fragments.ShortcutsFragment.putDisplaySettings;
+import static com.windroid.emu.fragments.ShortcutsFragment.putEmulator;
 import static com.windroid.emu.fragments.ShortcutsFragment.putEnableAFME;
 import static com.windroid.emu.fragments.ShortcutsFragment.putEnableDInput;
 import static com.windroid.emu.fragments.ShortcutsFragment.putEnableXInput;
 import static com.windroid.emu.fragments.ShortcutsFragment.putExeArguments;
+import static com.windroid.emu.fragments.ShortcutsFragment.putFEXCorePreset;
+import static com.windroid.emu.fragments.ShortcutsFragment.putFEXCoreVersion;
 import static com.windroid.emu.fragments.ShortcutsFragment.putSelectedVirtualControllerPreset;
 import static com.windroid.emu.fragments.ShortcutsFragment.putVKD3DVersion;
 import static com.windroid.emu.fragments.ShortcutsFragment.putVirtualControllerXInput;
@@ -157,8 +166,13 @@ public class EditGamePreferencesFragment extends DialogFragment {
     private MaterialSwitch enableXInputSwitch;
     private MaterialSwitch enableDInputSwitch;
     private Spinner cpuAffinitySpinner;
+    private Spinner selectedEmulatorSpinner;
+    private View layoutBox64Settings;
+    private View layoutFEXCoreSettings;
     private Spinner selectedBox64Spinner;
     private Spinner selectedBox64ProfileSpinner;
+    private Spinner selectedFEXCoreSpinner;
+    private Spinner selectedFEXCoreProfileSpinner;
     private List<TextView> controllersMappingTypeTexts;
     private List<Spinner> controllersMappingTypeSpinners;
     private List<TextView> controllersSwapAnalogsTexts;
@@ -268,6 +282,17 @@ public class EditGamePreferencesFragment extends DialogFragment {
                         public void onNothingSelected(AdapterView<?> adapterView) {
                         }
                     });
+        }
+    }
+
+    private void updateEmulatorLayoutVisibility(String emulator) {
+        String effective = "Global".equals(emulator) ? preferences.getString(SELECTED_EMULATOR, "Box64") : emulator;
+        if ("FEXCore".equals(effective)) {
+            if (layoutBox64Settings != null) layoutBox64Settings.setVisibility(View.GONE);
+            if (layoutFEXCoreSettings != null) layoutFEXCoreSettings.setVisibility(View.VISIBLE);
+        } else {
+            if (layoutBox64Settings != null) layoutBox64Settings.setVisibility(View.VISIBLE);
+            if (layoutFEXCoreSettings != null) layoutFEXCoreSettings.setVisibility(View.GONE);
         }
     }
 
@@ -392,8 +417,36 @@ public class EditGamePreferencesFragment extends DialogFragment {
             }
         });
 
+        selectedEmulatorSpinner = view.findViewById(R.id.selectedEmulator);
+        layoutBox64Settings = view.findViewById(R.id.layoutBox64Settings);
+        layoutFEXCoreSettings = view.findViewById(R.id.layoutFEXCoreSettings);
         selectedBox64Spinner = view.findViewById(R.id.selectedBox64);
         selectedBox64ProfileSpinner = view.findViewById(R.id.selectedBox64Profile);
+        selectedFEXCoreSpinner = view.findViewById(R.id.selectedFEXCore);
+        selectedFEXCoreProfileSpinner = view.findViewById(R.id.selectedFEXCoreProfile);
+
+        List<String> emulatorOptions = List.of("Global", "Box64", "FEXCore");
+        int emulatorIndex = emulatorOptions.indexOf(temporarySettings.emulator);
+        if (emulatorIndex < 0)
+            emulatorIndex = 0;
+
+        selectedEmulatorSpinner.setAdapter(
+                new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, emulatorOptions));
+        selectedEmulatorSpinner.setSelection(emulatorIndex);
+        selectedEmulatorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String chosen = emulatorOptions.get(i);
+                temporarySettings.emulator = chosen;
+                updateEmulatorLayoutVisibility(chosen);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+        updateEmulatorLayoutVisibility(temporarySettings.emulator);
+
         imageView = view.findViewById(R.id.imageView);
         exePathText = view.findViewById(R.id.appExePath);
 
@@ -757,6 +810,61 @@ public class EditGamePreferencesFragment extends DialogFragment {
             }
         });
 
+        List<RatPackageManager.RatPackage> fexcorePackages = listRatPackages("FEXCore");
+        ArrayList<String> fexcoreVersions = new ArrayList<>(fexcorePackages.size() + 1);
+        ArrayList<String> fexcoreVersionsId = new ArrayList<>(fexcorePackages.size() + 1);
+
+        fexcoreVersions.add("Global: " + getPackageNameVersionById(preferences.getString(SELECTED_FEXCORE, "")));
+        fexcoreVersionsId.add("Global");
+
+        for (RatPackageManager.RatPackage ratPackage : fexcorePackages) {
+            fexcoreVersions.add(ratPackage.getName() + " " + ratPackage.getVersion());
+            fexcoreVersionsId.add(ratPackage.getFolderName());
+        }
+
+        int fexcoreIndex = fexcoreVersionsId.indexOf(getFEXCoreVersion(selectedGameName));
+        if (fexcoreIndex < 0)
+            fexcoreIndex = 0;
+
+        selectedFEXCoreSpinner.setAdapter(
+                new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, fexcoreVersions));
+        selectedFEXCoreSpinner.setSelection(fexcoreIndex);
+        selectedFEXCoreSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                temporarySettings.fexCoreVersion = fexcoreVersionsId.get(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
+        List<FEXCorePresetManagerFragment.FEXCorePreset> fexPresets = getFEXCorePresets();
+        ArrayList<String> fexPresetsName = new ArrayList<>(fexPresets.size());
+
+        for (FEXCorePresetManagerFragment.FEXCorePreset fexPreset : fexPresets) {
+            fexPresetsName.add(fexPreset.name);
+        }
+
+        int fexPresetIndex = fexPresetsName.indexOf(getFEXCorePreset(selectedGameName));
+        if (fexPresetIndex < 0)
+            fexPresetIndex = 0;
+
+        selectedFEXCoreProfileSpinner.setAdapter(
+                new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, fexPresetsName));
+        selectedFEXCoreProfileSpinner.setSelection(fexPresetIndex);
+        selectedFEXCoreProfileSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                temporarySettings.fexCorePreset = fexPresetsName.get(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
         buttonContinue.setOnClickListener((v) -> {
             switch (type) {
                 case EDIT_GAME_PREFERENCES -> {
@@ -794,8 +902,11 @@ public class EditGamePreferencesFragment extends DialogFragment {
                     putControllerPreset(selectedGameName, temporarySettings.controllerPreset[2], 2);
                     putControllerPreset(selectedGameName, temporarySettings.controllerPreset[3], 3);
 
+                    putEmulator(selectedGameName, temporarySettings.emulator);
                     putBox64Version(selectedGameName, temporarySettings.box64Version);
                     putBox64Preset(selectedGameName, temporarySettings.box64Preset);
+                    putFEXCoreVersion(selectedGameName, temporarySettings.fexCoreVersion);
+                    putFEXCorePreset(selectedGameName, temporarySettings.fexCorePreset);
 
                     putEnableXInput(selectedGameName, temporarySettings.enableXInput);
                     putEnableDInput(selectedGameName, temporarySettings.enableDInput);
@@ -813,8 +924,11 @@ public class EditGamePreferencesFragment extends DialogFragment {
                     runWineIntent.putExtra("exeArguments", arguments);
                     runWineIntent.putExtra("driverName", temporarySettings.vulkanDriver);
                     runWineIntent.putExtra("driverType", getVulkanDriverType(temporarySettings.vulkanDriver));
+                    runWineIntent.putExtra("emulator", temporarySettings.emulator);
                     runWineIntent.putExtra("box64Version", temporarySettings.box64Version);
                     runWineIntent.putExtra("box64Preset", temporarySettings.box64Preset);
+                    runWineIntent.putExtra("fexCoreVersion", temporarySettings.fexCoreVersion);
+                    runWineIntent.putExtra("fexCorePreset", temporarySettings.fexCorePreset);
                     runWineIntent.putExtra("displayResolution", temporarySettings.displayResolution);
                     runWineIntent.putExtra("virtualControllerPreset", temporarySettings.virtualControllerPreset);
                     runWineIntent.putExtra("d3dxRenderer", temporarySettings.d3dxRenderer);
@@ -915,8 +1029,11 @@ public class EditGamePreferencesFragment extends DialogFragment {
                 getControllerXInputSwapAnalogs(selectedGameName, 2),
                 getControllerXInputSwapAnalogs(selectedGameName, 3)
         };
+        String emulator = getEmulator(selectedGameName);
         String box64Version = getBox64Version(selectedGameName);
         String box64Preset = getBox64Preset(selectedGameName);
+        String fexCoreVersion = getFEXCoreVersion(selectedGameName);
+        String fexCorePreset = getFEXCorePreset(selectedGameName);
         boolean enableXInput = getEnableXInput(selectedGameName);
         boolean enableDInput = getEnableDInput(selectedGameName);
         String vramLimit = getVramLimit(selectedGameName);

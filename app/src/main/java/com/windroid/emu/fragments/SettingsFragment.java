@@ -43,6 +43,7 @@ public class SettingsFragment extends Fragment {
 
         if (!deviceArch.equals("x86_64")) {
             addToAdapter(R.string.box64_preset_manager_title, R.string.box64_preset_manager_desc, R.drawable.ic_box64);
+            addToAdapter(R.string.fexcore_preset_manager_title, R.string.fexcore_preset_manager_desc, R.drawable.ic_fexcore);
         }
 
         addToAdapter(R.string.wine_unified_settings_title, R.string.wine_unified_settings_desc, R.drawable.ic_wine);

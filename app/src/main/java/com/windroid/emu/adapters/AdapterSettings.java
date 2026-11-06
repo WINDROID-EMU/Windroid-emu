@@ -2,6 +2,7 @@ package com.windroid.emu.adapters;
 
 import static com.windroid.emu.activities.GeneralSettingsActivity.ACTION_PREFERENCE_SELECT;
 import static com.windroid.emu.fragments.CreatePresetFragment.BOX64_PRESET;
+import static com.windroid.emu.fragments.CreatePresetFragment.FEXCORE_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.VIRTUAL_CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.WINE_PREFIX_PRESET;
@@ -93,6 +94,10 @@ public class AdapterSettings extends RecyclerView.Adapter<AdapterSettings.ViewHo
             } else if (item.titleSettings.equals(context.getString(R.string.box64_preset_manager_title))) {
                 Intent intent = new Intent(context, PresetManagerActivity.class);
                 intent.putExtra("presetType", BOX64_PRESET);
+                context.startActivity(intent);
+            } else if (item.titleSettings.equals(context.getString(R.string.fexcore_preset_manager_title))) {
+                Intent intent = new Intent(context, PresetManagerActivity.class);
+                intent.putExtra("presetType", FEXCORE_PRESET);
                 context.startActivity(intent);
             } else if (item.titleSettings.equals(context.getString(R.string.wine_prefix_manager_title))) {
                 Intent intent = new Intent(context, PresetManagerActivity.class);

@@ -142,7 +142,7 @@
     <string name="tu_texture_lod_bias_title" translatable="false">TU_TEXTURE_LOD_BIAS (Texture Quality)</string>
     <string name="tu_texture_lod_bias_desc">Adjust Texture LOD Bias (0.5-10.0). Higher values = lower texture quality = better performance. Can remove textures at high values</string>
     <string name="tu_force_mip_level_title" translatable="false">TU_FORCE_MIP_LEVEL (Texture Downscaling)</string>
-    <string name="tu_force_mip_level_desc">Force smaller texture mipmap resolution (Off, 50%, 25%, 12.5%)</string>
+    <string name="tu_force_mip_level_desc" formatted="false">Force smaller texture mipmap resolution (Off, 50%, 25%, 12.5%)</string>
     <string name="tu_force_shading_rate_title" translatable="false">TU_FORCE_SHADING_RATE</string>
     <string name="tu_force_shading_rate_desc">Enable variable rate shading for better performance</string>
     <string name="tu_force_sysmem_title" translatable="false">TU_FORCE_SYSMEM</string>
@@ -347,4 +347,33 @@
     <string name="enable_vibration_desc">Allow phone to vibrate based on in-game actions</string>
     <string name="clear_all_shortcuts">Clear All Shortcuts</string>
     <string name="clear_all_shortcuts_desc">Apagar todos atalhos</string>
+
+    <!-- FEXCore Strings -->
+    <string name="fex_tso_enabled" translatable="false">FEX_TSOENABLED</string>
+    <string name="fex_tso_enabled_desc">Enable/Disable Total Store Order (TSO) memory model emulation</string>
+    <string name="fex_multi_block" translatable="false">FEX_MULTIBLOCK</string>
+    <string name="fex_multi_block_desc">Enable/Disable multi-block JIT translation for higher performance</string>
+    <string name="fex_x87_reduced_precision" translatable="false">FEX_X87REDUCEDPRECISION</string>
+    <string name="fex_x87_reduced_precision_desc">Use reduced 64-bit precision for x87 floating point operations</string>
+    <string name="fex_silent_log" translatable="false">FEX_SILENTLOG</string>
+    <string name="fex_silent_log_desc">Disable verbose FEX logging for cleaner logs and minor performance gain</string>
+    <string name="fex_smc_checks" translatable="false">FEX_SMCCHECKS</string>
+    <string name="fex_smc_checks_desc">Self-modifying code detection strategy (none, app, mtrack)</string>
+    <string name="fex_vector_width" translatable="false">FEX_VECTOR_WIDTH</string>
+    <string name="fex_vector_width_desc">Host vector width in bits (128 or 256)</string>
+
+    <string name="fexcore_settings_title">FEXCore Settings</string>
+    <string name="fexcore_settings_desc">Configure FEXCore emulator</string>
+    <string name="fexcore_manager_title">FEXCore Manager</string>
+    <string name="fexcore_manager_desc">Manage FEXCore Versions</string>
+    <string name="fexcore_preset_manager_title">FEXCore Preset Manager</string>
+    <string name="fexcore_preset_manager_desc">Manage FEXCore Presets</string>
+    <string name="selected_fexcore_profile">Selected FEXCore Profile</string>
+    <string name="selected_fexcore">Selected FEXCore</string>
+    <string name="fexcore_version">FEXCore Version</string>
+    <string name="installing_fexcore">Installing FEXCore…</string>
+    <string name="invalid_fexcore_preset_file">Invalid FEXCore Preset File</string>
+    <string name="translation_layer_title">Translation Layer</string>
+    <string name="translation_layer_desc">Select CPU Emulator (Box64 or FEXCore)</string>
+    <string name="emulator_title">CPU Emulator</string>
 </resources>

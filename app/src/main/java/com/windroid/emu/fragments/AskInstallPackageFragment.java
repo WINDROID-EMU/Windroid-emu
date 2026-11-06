@@ -3,8 +3,10 @@ package com.windroid.emu.fragments;
 import static com.windroid.emu.activities.MainActivity.ACTION_INSTALL_ADTOOLS_DRIVER;
 import static com.windroid.emu.activities.MainActivity.ACTION_INSTALL_RAT;
 import static com.windroid.emu.fragments.Box64PresetManagerFragment.importBox64Preset;
+import static com.windroid.emu.fragments.FEXCorePresetManagerFragment.importFEXCorePreset;
 import static com.windroid.emu.fragments.ControllerPresetManagerFragment.importControllerPreset;
 import static com.windroid.emu.fragments.CreatePresetFragment.BOX64_PRESET;
+import static com.windroid.emu.fragments.CreatePresetFragment.FEXCORE_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.CreatePresetFragment.VIRTUAL_CONTROLLER_PRESET;
 import static com.windroid.emu.fragments.VirtualControllerPresetManagerFragment.importVirtualControllerPreset;
@@ -88,6 +90,12 @@ public class AskInstallPackageFragment extends DialogFragment {
                             boolean ret = importBox64Preset(mwpPresetCandidate.file);
                             if (!ret) {
                                 Toast.makeText(requireContext(), R.string.invalid_box64_preset_file, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        case FEXCORE_PRESET -> {
+                            boolean ret = importFEXCorePreset(mwpPresetCandidate.file);
+                            if (!ret) {
+                                Toast.makeText(requireContext(), R.string.invalid_fexcore_preset_file, Toast.LENGTH_SHORT).show();
                             }
                         }
                     }
